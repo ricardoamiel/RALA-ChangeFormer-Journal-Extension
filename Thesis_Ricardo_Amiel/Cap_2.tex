@@ -1,24 +1,7 @@
 \chapter{Theoretical Background}
 \label{chap:background}
 
-This chapter establishes the conceptual and mathematical foundations required
-to understand the proposed RALA-ChangeFormer architecture. Section~\ref{sec:sat-imagery}
-introduces the principles of satellite remote sensing, the orbital and resolution
-characteristics relevant to very high-resolution (VHR) urban monitoring, and the
-formal problem statement for bi-temporal building change detection.
-Section~\ref{sec:siamese-conv} reviews the family of Siamese convolutional
-architectures that defined the pre-Transformer era of change detection research,
-motivating the transition to attention-based models.
-Section~\ref{sec:transformers-attn} derives the full mathematical structure of
-multi-head self-attention, including its quadratic time and memory complexity, and
-traces its adoption within hierarchical Vision Transformer architectures for Earth
-observation. Section~\ref{sec:rala-theory} develops the theoretical basis of
-Rank-Augmented Linear Attention~\cite{Fan2025RALA}, beginning with the standard
-linear attention formulation, formally characterizing the rank collapse failure mode,
-and establishing the rank-augmentation and output-modulation mechanisms that RALA
-employs to correct it. Section~\ref{sec:metrics} defines the quantitative evaluation
-metrics used throughout the experimental chapters. Section~\ref{sec:bg-final}
-synthesizes these foundations and maps them onto the RALA-ChangeFormer design.
+This chapter establishes the conceptual and mathematical foundations required to understand the proposed RALA-ChangeFormer architecture. Section~\ref{sec:sat-imagery} introduces the principles of satellite remote sensing, the orbital and resolution characteristics relevant to \ac{VHR} urban monitoring, and the formal problem statement for bi-temporal building change detection. Section~\ref{sec:siamese-conv} reviews the family of Siamese convolutional architectures that defined the pre-Transformer era of change detection research, motivating the transition to attention-based models. Section~\ref{sec:transformers-attn} derives the full mathematical structure of multi-head self-attention, including its quadratic time and memory complexity, and traces its adoption within hierarchical Vision Transformer architectures for Earth observation. Section~\ref{sec:rala-theory} develops the theoretical basis of Rank-Augmented Linear Attention~\cite{Fan2025RALA}, beginning with the standard linear attention formulation, formally characterizing the rank collapse failure mode, and establishing the rank-augmentation and output-modulation mechanisms that \ac{RALA} employs to correct it. Section~\ref{sec:metrics} defines the quantitative evaluation metrics used throughout the experimental chapters. Section~\ref{sec:bg-final} synthesizes these foundations and maps them onto the RALA-ChangeFormer design.
 
 
 % =============================================================================
@@ -28,150 +11,57 @@ synthesizes these foundations and maps them onto the RALA-ChangeFormer design.
 
 \subsection{Satellite Imaging Principles}
 
-Satellite remote sensing acquires information about the Earth's surface by
-recording electromagnetic radiation---reflected, emitted, or backscattered---
-across a range of spectral wavelengths.\footnote{Raya-Armenta, J.~M. et al.\
-(2021). A short review of radiation-induced degradation of {III--V}
-photovoltaic cells for space applications. \textit{Solar Energy Materials and
-Solar Cells}, 233, 111379.
-doi:~\url{https://doi.org/10.1016/j.solmat.2021.111379}}
-Depending on the sensor design, recorded bands may span the visible spectrum,
-near-infrared, thermal infrared, or microwave domains, enabling applications
-ranging from crop-health assessment to post-disaster damage mapping.
-The operational orbit of a satellite determines its altitude, coverage footprint,
-and revisit frequency, and consequently defines the trade-offs available to a
-remote sensing mission.
+Satellite remote sensing acquires information about the Earth's surface by recording electromagnetic radiation reflected, emitted, or backscattered across a range of spectral wavelengths\footnote{Raya-Armenta, J.~M. et al.\ (2021). A short review of radiation-induced degradation of {III-V} photovoltaic cells for space applications. \textit{Solar Energy Materials and Solar Cells}, 233, 111379. doi:~\url{https://doi.org/10.1016/j.solmat.2021.111379}}. Depending on the sensor design, recorded bands may span the visible spectrum, near-infrared, thermal infrared, or microwave domains, enabling applications ranging from crop-health assessment to post-disaster damage mapping. The operational orbit of a satellite determines its altitude, coverage footprint, and revisit frequency, and consequently defines the trade-offs available to a remote sensing mission.
 
-\noindent\textbf{Geostationary Orbit (GEO).}
-Geostationary satellites are positioned at approximately 36\,000~km above the
-equator, maintaining a fixed position relative to the Earth's surface. Their
-constant viewing angle makes them ideal for meteorological monitoring and
-telecommunications, but their great altitude limits achievable spatial resolution
-to the kilometer scale, precluding building-level analysis.
+\noindent\textbf{\ac{GEO}.} Geostationary satellites are positioned at approximately 36\,000~km above the equator, maintaining a fixed position relative to the Earth's surface. Their constant viewing angle makes them ideal for meteorological monitoring and telecommunications, but their great altitude limits achievable spatial resolution to the kilometer scale, precluding building-level analysis.
 
-\noindent\textbf{Low Earth Orbit (LEO).}
-Low Earth Orbit satellites operate between approximately 400 and 2\,000~km
-altitude and complete several full passes over any given location per day.
-Their proximity to Earth enables very high spatial resolution. The Peruvian
-national satellite PeruSAT-1, launched in 2016, belongs to this category and
-is capable of acquiring panchromatic imagery at 0.70~meters per pixel and
-multispectral imagery at 2.80~meters per pixel,\footnote{PeruSAT-1 technical
-specifications: panchromatic resolution $\sim$0.70\,m, multispectral resolution
-$\sim$2.8\,m. See Airbus PeruSAT-1 datasheet; EO Portal; N2YO.}
-a spatial resolution sufficient to delineate individual building footprints,
-rooftop configurations, and single-storey additions across large urban extents
-in a single orbital pass.
+\noindent\textbf{\ac{LEO}.} Low Earth Orbit satellites operate between approximately 400 and 2\,000~km altitude and complete several full passes over any given location per day. Their proximity to Earth enables very high spatial resolution (Figure~\ref{fig:geovsleo}). The Peruvian national satellite PeruSAT-1, launched in 2016, belongs to this category and is capable of acquiring panchromatic imagery at 0.70~meters per pixel and multispectral imagery at 2.80~meters per pixel,\footnote{PeruSAT-1 technical specifications: panchromatic resolution $\sim$0.70\,m, multispectral resolution $\sim$2.8\,m. See Airbus PeruSAT-1 datasheet; EO Portal; N2YO.} a spatial resolution sufficient to delineate individual building footprints, rooftop configurations, and single-storey additions across large urban extents in a single orbital pass.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.70\textwidth]{graficos/GEOvsLEO.png}
-    \caption{Geostationary Orbit (GEO) versus Low Earth Orbit (LEO) satellites.
-    LEO missions such as PeruSAT-1 achieve the high spatial resolution necessary
-    for building-level urban change detection.}
+\caption{Geostationary Orbit (GEO) versus Low Earth Orbit (LEO) satellites. LEO missions such as PeruSAT-1 achieve the high spatial resolution necessary for building-level urban change detection \cite{RayaArmenta2021}.}
     \label{fig:geovsleo}
 \end{figure}
 
-The operational utility of a satellite imaging system is characterized along
-four resolution dimensions,\footnote{Introduction to Remote Sensing.
-\url{https://eol.pages.cms.hu-berlin.de/geo_rs/S02_image-prop1.html}}
-each independently constraining the kind of analysis that can be performed:
+The operational utility of a satellite imaging system is characterized along four resolution dimensions (Figure~\ref{fig:resolutions}),\footnote{Introduction to Remote Sensing. \url{https://eol.pages.cms.hu-berlin.de/geo_rs/S02_image-prop1.html}} each independently constraining the kind of analysis that can be performed:
 
 \begin{itemize}
-    \item \textbf{Spatial resolution:} the ground sampling distance, i.e., the
-          side length of the ground area corresponding to one image pixel. VHR
-          systems achieve spatial resolutions below 1\,m, enabling structural
-          discrimination at the building level.
-    \item \textbf{Spectral resolution:} the number and spectral width of the
-          recorded bands, governing the capacity to distinguish spectrally similar
-          materials (e.g., concrete versus asphalt roofing).
-    \item \textbf{Radiometric resolution:} the bit depth of the sensor,
-          determining the number of distinct intensity levels that can be recorded
-          and hence the dynamic range available for analysis.
-    \item \textbf{Temporal resolution:} the revisit period over the same
-          geographic area, which governs how frequently bi-temporal image pairs
-          can be formed to detect change.
+\item \textbf{Spatial resolution:} the ground sampling distance, i.e., the side length of the ground area corresponding to one image pixel. \ac{VHR} systems achieve spatial resolutions below 1\,m, enabling structural discrimination at the building level.
+\item \textbf{Spectral resolution:} the number and spectral width of the recorded bands, governing the capacity to distinguish spectrally similar materials (e.g., concrete versus asphalt roofing).
+\item \textbf{Radiometric resolution:} the bit depth of the sensor, determining the number of distinct intensity levels that can be recorded and hence the dynamic range available for analysis.
+\item \textbf{Temporal resolution:} the revisit period over the same geographic area, which governs how frequently bi-temporal image pairs can be formed to detect change.
 \end{itemize}
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.70\textwidth]{graficos/resolutions.png}
-    \caption{The four resolution dimensions that characterize the operational
-    quality of a satellite imaging mission. Spatial resolution is the primary
-    determinant of whether individual buildings can be resolved in the imagery.}
+\caption{The four resolution dimensions that characterize the operational quality of a satellite imaging mission. Spatial resolution is the primary determinant of whether individual buildings can be resolved in the imagery. \footnotesize Source: \href{https://eol.pages.cms.hu-berlin.de/geo_rs/S02_image-prop1.html}{Introduction to Remote Sensing}.}
     \label{fig:resolutions}
 \end{figure}
 
 \subsection{The Bi-Temporal Building Change Detection Problem}
 \label{sec:bcd-prelim}
 
-As surveyed by \cite{Hussain2013Review} and \cite{Shafique2022Review},
-building change detection (BCD) is a well-established research problem in
-remote sensing, with a methodological lineage that extends from early
-pixel-differencing and image-ratio approaches to the deep learning
-formulations that now define state-of-the-art practice. The task is
-formally defined as follows.
+\ac{BCD} is a well-established research problem in remote sensing \cite{Hussain2013Review, Shafique2022Review}, with a methodological lineage that extends from early pixel-differencing and image-ratio approaches to the deep learning formulations that now define state-of-the-art practice. The task is formally defined as follows.
 
-Let $I_{t_1}, I_{t_2} \in \mathbb{R}^{H \times W \times C}$ denote a pair of
-co-registered satellite images of the same geographic area, acquired at temporal
-epochs $t_1 < t_2$, where $H$, $W$, and $C$ denote the spatial height, width,
-and number of spectral channels, respectively. The goal of binary BCD is to
-produce a change mask
+Let $I_{t_1}, I_{t_2} \in \mathbb{R}^{H \times W \times C}$ denote a pair of co-registered satellite images of the same geographic area, acquired at temporal epochs $t_1 < t_2$, where $H$, $W$, and $C$ denote the spatial height, width, and number of spectral channels, respectively. The goal of binary \ac{BCD} is to produce a change mask
 \begin{equation}
 Y \in \{0, 1\}^{H \times W},
 \label{eq:change_mask}
 \end{equation}
-where $Y_{ij} = 1$ indicates that a semantically meaningful structural change
-has occurred at pixel $(i, j)$ between $t_1$ and $t_2$, and $Y_{ij} = 0$
-indicates absence of change. In the context of urban monitoring, change labels
-correspond to the appearance, disappearance, or substantial structural
-modification of buildings. This formulation reduces BCD to a dense binary
-semantic segmentation problem: the model $f_\theta$ must predict $\hat{Y}$
-from the concatenated or paired inputs $(I_{t_1}, I_{t_2})$, with parameters
-$\theta$ learned from an annotated dataset
-$\mathcal{D} = \{(I_{t_1}^{(n)}, I_{t_2}^{(n)}, Y^{(n)})\}_{n=1}^{M}$.
+where $Y_{ij} = 1$ indicates that a semantically meaningful structural change has occurred at pixel $(i, j)$ between $t_1$ and $t_2$, and $Y_{ij} = 0$ indicates absence of change. In the context of urban monitoring, change labels correspond to the appearance, disappearance, or substantial structural modification of buildings. This formulation reduces \ac{BCD} to a dense binary semantic segmentation problem: the model $f_\theta$ must predict $\hat{Y}$ from the concatenated or paired inputs $(I_{t_1}, I_{t_2})$, with parameters $\theta$ learned from an annotated dataset $\mathcal{D} = \{(I_{t_1}^{(n)}, I_{t_2}^{(n)}, Y^{(n)})\}_{n=1}^{M}$.
 
-Several intrinsic properties make BCD considerably more difficult than
-standard single-image segmentation. The most pervasive is severe class
-imbalance: in typical urban VHR datasets, changed pixels constitute only 1--10
-percent of the total image area, so the marginal prior probability
-$p(Y_{ij} = 1)$ is small and naive models tend toward predicting no-change.
-A second challenge is geometric misregistration: even with state-of-the-art
-image alignment, residual sub-pixel to multi-pixel spatial offsets between
-acquisitions can generate spurious boundary responses that are visually
-indistinguishable from genuine structural modifications
-\cite{Bandara2022ChangeFormer}. Radiometric inconsistency---caused by
-differences in sun angle, atmospheric conditions, sensor gain settings, and
-seasonal vegetation state between acquisitions---further complicates the
-direct comparison of image pairs. Finally, the scarcity of large-scale,
-precisely annotated VHR datasets for cities in the Global South, including
-Lima, limits the training and evaluation of models for local operational
-deployment.
+Several intrinsic properties make \ac{BCD} considerably more difficult than standard single-image segmentation. The most pervasive is severe class imbalance: in typical urban \ac{VHR} datasets, changed pixels constitute only 1-10 percent of the total image area, so the marginal prior probability $p(Y_{ij} = 1)$ is small and naive models tend toward predicting no-change. A second challenge is geometric misregistration: even with state-of-the-art image alignment, residual sub-pixel to multi-pixel spatial offsets between acquisitions can generate spurious boundary responses that are visually indistinguishable from genuine structural modifications \cite{Bandara2022ChangeFormer}. Radiometric inconsistency caused by differences in sun angle, atmospheric conditions, sensor gain settings, and seasonal vegetation state between acquisitions further complicates the direct comparison of image pairs. Finally, the scarcity of large-scale, precisely annotated \ac{VHR} datasets for cities in the Global South, including Lima, limits the training and evaluation of models for local operational deployment.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.65\textwidth]{graficos/LevirCD2.png}
-    \caption{Bi-temporal sample from the LEVIR-CD dataset
-    \cite{Zheng2020LEVIR}. Left and center panels show the pre-event and
-    post-event images; the right panel shows the ground-truth binary change
-    mask, where white pixels indicate newly constructed buildings.}
+\caption{Bi-temporal sample from the LEVIR-CD dataset \cite{Zheng2020LEVIR}. Left and center panels show the pre-event and post-event images; the right panel shows the ground-truth binary change mask, where white pixels indicate newly constructed buildings.}
     \label{fig:levircd2}
 \end{figure}
 
-The principal public benchmarks used in this thesis span a range of acquisition
-geometries, spatial resolutions, and annotation protocols. LEVIR-CD
-\cite{Zheng2020LEVIR} contains 637 bi-temporal VHR Google Earth pairs
-(1024$\times$1024 pixels) of rapidly developing urban areas. DSIFN-CD
-\cite{Zhang2020FusionNetDSIFN} provides multi-class change scenes at
-512$\times$512 pixels under heterogeneous imaging conditions. The extended
-experimental suite adds WHU-CD \cite{Ji2019WHU}, an aerial centimetre-resolution
-dataset with precise building annotations; LEVIR-CD+ \cite{LevirCDPlus},
-an augmented version of LEVIR-CD covering wider urban morphologies;
-SYSU-CD \cite{ShiSYSU2022}, a 20\,000-pair dataset acquired over nine years
-encompassing multi-class surface changes; and S2Looking \cite{ShenS2Looking2021},
-a side-looking satellite dataset whose oblique acquisition geometry introduces
-perspective distortions that challenge models pretrained on nadir-view imagery.
-Together, these six benchmarks provide the evaluation substrate for the
-cross-domain experiments in Chapter~\ref{chap:experiments}.
+The principal public benchmarks used in this thesis span a range of acquisition geometries, spatial resolutions, and annotation protocols. LEVIR-CD \cite{Zheng2020LEVIR} contains 637 bi-temporal \ac{VHR} Google Earth pairs (1024$\times$1024 pixels) of rapidly developing urban areas (Figure~\ref{fig:levircd2}). DSIFN-CD \cite{Zhang2020FusionNetDSIFN} provides multi-class change scenes at 512$\times$512 pixels under heterogeneous imaging conditions. The extended experimental suite adds WHU-CD \cite{Ji2019WHU}, an aerial centimetre-resolution dataset with precise building annotations; LEVIR-CD+ \cite{LevirCDPlus}, an augmented version of LEVIR-CD covering wider urban morphologies; SYSU-CD \cite{ShiSYSU2022}, a 20\,000-pair dataset acquired over nine years encompassing multi-class surface changes; and S2Looking \cite{ShenS2Looking2021}, a side-looking satellite dataset whose oblique acquisition geometry introduces perspective distortions that challenge models pretrained on nadir-view imagery. Together, these six benchmarks provide the evaluation substrate for the cross-domain experiments in Chapter~\ref{chap:experiments}.
 
 
 % =============================================================================
@@ -179,63 +69,29 @@ cross-domain experiments in Chapter~\ref{chap:experiments}.
 \label{sec:siamese-conv}
 % =============================================================================
 
-Prior to the adoption of attention mechanisms, the dominant paradigm for deep
-BCD was the \emph{Siamese convolutional network}: a pair of identical,
-weight-sharing encoder branches that independently extract features---as
-pioneered by \cite{Daudt2018SiamICIP} and extended by \cite{Yang2021DeepSiamese}---
-from $I_{t_1}$ and $I_{t_2}$, followed by a change-detection head that compares
-the resulting representations. Understanding this family of architectures is
-necessary to appreciate the representational limitations that Transformer-based
-models were designed to overcome.
+Prior to the adoption of attention mechanisms, the dominant paradigm for deep \ac{BCD} was the \emph{Siamese convolutional network}: a pair of identical, weight-sharing encoder branches that independently extract features from $I_{t_1}$ and $I_{t_2}$, followed by a change-detection head that compares the resulting representations \cite{Daudt2018SiamICIP, Yang2021DeepSiamese}. Understanding this family of architectures is necessary to appreciate the representational limitations that Transformer-based models were designed to overcome.
 
 \subsection{Fully Convolutional Siamese Networks}
 
-\cite{Daudt2018SiamICIP} introduced three fully convolutional Siamese variants
-that established the structural blueprint for subsequent convolutional BCD
-research. Let $f_\theta: \mathbb{R}^{H \times W \times C} \to
-\mathbb{R}^{H' \times W' \times D}$ denote a shared convolutional encoder
-with learnable parameters $\theta$. Given the bi-temporal pair, the encoder
-produces feature maps
+Three fully convolutional Siamese variants that established the structural blueprint for subsequent convolutional \ac{BCD} research were first introduced in \cite{Daudt2018SiamICIP}. Let $f_\theta: \mathbb{R}^{H \times W \times C} \to \mathbb{R}^{H' \times W' \times D}$ denote a shared convolutional encoder with learnable parameters $\theta$. Given the bi-temporal pair, the encoder produces feature maps
 \begin{equation}
 F_1 = f_\theta(I_{t_1}), \qquad F_2 = f_\theta(I_{t_2}),
 \qquad F_1, F_2 \in \mathbb{R}^{H' \times W' \times D}.
 \label{eq:siamese_features}
 \end{equation}
 
-The \emph{early-fusion} variant (FC-EF) concatenates the two input images
-channel-wise before the encoder, processing the stacked tensor
-$[I_{t_1} \| I_{t_2}] \in \mathbb{R}^{H \times W \times 2C}$ through a
-single encoder branch. The \emph{late-differencing} variant (FC-Siam-diff)
-computes element-wise feature differences
+The \emph{early-fusion} variant (FC-EF) concatenates the two input images channel-wise before the encoder, processing the stacked tensor $[I_{t_1} \| I_{t_2}] \in \mathbb{R}^{H \times W \times 2C}$ through a single encoder branch. The \emph{late-differencing} variant (FC-Siam-diff) computes element-wise feature differences
 \begin{equation}
-\Delta F = F_1 - F_2 \in \mathbb{R}^{H' \times W' \times D},
+\Delta F = F_1- F_2 \in \mathbb{R}^{H' \times W' \times D},
 \label{eq:feature_diff}
 \end{equation}
-which the decoder then decodes into the binary change mask. The
-\emph{concatenation} variant (FC-Siam-conc) concatenates $F_1$ and $F_2$
-channel-wise and passes the result to the decoder. All three variants share
-the same encoder, and the key insight is that weight-sharing enforces feature
-space alignment between temporal branches, making the subsequent comparison
-more semantically meaningful than operating on raw pixel differences.
+which the decoder then decodes into the binary change mask. The \emph{concatenation} variant (FC-Siam-conc) concatenates $F_1$ and $F_2$ channel-wise and passes the result to the decoder. All three variants share the same encoder, and the key insight is that weight-sharing enforces feature space alignment between temporal branches, making the subsequent comparison more semantically meaningful than operating on raw pixel differences.
 
-Despite their elegance, fully convolutional Siamese architectures have a
-fundamental representational limitation: convolutional operations are
-inherently local, with each output neuron attending to a fixed neighborhood
-determined by the receptive field. In BCD, where distinguishing a genuine
-structural change from a seasonal spectral shift often requires integrating
-contextual information from spatially distant regions of the image, this
-locality constraint is a severe bottleneck.
+Despite their elegance, fully convolutional Siamese architectures have a fundamental representational limitation: convolutional operations are inherently local, with each output neuron attending to a fixed neighborhood determined by the receptive field. In \ac{BCD}, where distinguishing a genuine structural change from a seasonal spectral shift often requires integrating contextual information from spatially distant regions of the image, this locality constraint is a severe bottleneck.
 
 \subsection{SNUNet-CD: Densely Connected Siamese Architecture}
 
-SNUNet-CD \cite{Fang2021SNUNetCD} addressed the information loss between
-encoder and decoder by introducing a densely connected Siamese architecture
-inspired by NestedUNet. Given a Siamese encoder producing multi-scale feature
-maps $\{F_1^{(l)}, F_2^{(l)}\}_{l=1}^{L}$ at $L$ resolution levels, SNUNet-CD
-constructs an ensemble of dense skip connections between all pairs of encoder
-and decoder nodes at the same resolution level, forming a nested feature
-aggregation network. At each node $(i, j)$ in the encoder-decoder grid,
-the representation is computed as
+SNUNet-CD \cite{Fang2021SNUNetCD} addressed the information loss between encoder and decoder by introducing a densely connected Siamese architecture inspired by NestedUNet. Given a Siamese encoder producing multi-scale feature maps $\{F_1^{(l)}, F_2^{(l)}\}_{l=1}^{L}$ at $L$ resolution levels, SNUNet-CD constructs an ensemble of dense skip connections between all pairs of encoder and decoder nodes at the same resolution level, forming a nested feature aggregation network. At each node $(i, j)$ in the encoder-decoder grid, the representation is computed as
 \begin{equation}
 x^{i,j} = \mathcal{H}^{i,j}\!\left(
     x^{i,j-1},\;
@@ -244,47 +100,20 @@ x^{i,j} = \mathcal{H}^{i,j}\!\left(
 \right),
 \label{eq:snunet}
 \end{equation}
-where $x^{i,j-1}$ denotes the up-sampled decoder feature from the previous
-node, $x^{i+1, k}$ are the pooled encoder features from the deeper level,
-$\Delta x^{i,j}$ is the difference between the two temporal branches at that
-node, and $\mathcal{H}^{i,j}$ is a convolutional block. The dense connectivity
-pattern reduces the maximum feature propagation path, alleviating the vanishing
-gradient problem and preserving fine-grained spatial details that standard
-U-Net skip connections tend to lose.
+where $x^{i,j-1}$ denotes the up-sampled decoder feature from the previous node, $x^{i+1, k}$ are the pooled encoder features from the deeper level, $\Delta x^{i,j}$ is the difference between the two temporal branches at that node, and $\mathcal{H}^{i,j}$ is a convolutional block. The dense connectivity pattern reduces the maximum feature propagation path, alleviating the vanishing gradient problem and preserving fine-grained spatial details that standard U-Net skip connections tend to lose.
 
 \subsection{DSIFN-CD: Deep Fusion for Multi-Scale Comparison}
 
-\cite{Zhang2020FusionNetDSIFN} proposed DSIFN-CD (Deeply Supervised Image
-Fusion Network), which introduced an explicit deep supervision strategy to
-guide multi-scale feature comparison in the DSIFN-CD dataset. The architecture
-processes bi-temporal features through a series of fusion modules that compute
-channel-wise attention weights from the concatenated representation
-$[F_1^{(l)} \| F_2^{(l)}]$ at each scale $l$, modulating the relative
-contribution of each channel to the change map. Intermediate change predictions
-are generated at multiple decoder levels and supervised independently with
-auxiliary losses, enforcing that semantically meaningful change signals are
-present in the feature hierarchy from early training iterations.
+DSIFN-CD (Deeply Supervised Image Fusion Network) \cite{Zhang2020FusionNetDSIFN} introduced an explicit deep supervision strategy to guide multi-scale feature comparison in the DSIFN-CD dataset (Figure~\ref{fig:dsifn_samples}). The architecture processes bi-temporal features through a series of fusion modules that compute channel-wise attention weights from the concatenated representation $[F_1^{(l)} \| F_2^{(l)}]$ at each scale $l$, modulating the relative contribution of each channel to the change map. Intermediate change predictions are generated at multiple decoder levels and supervised independently with auxiliary losses, enforcing that semantically meaningful change signals are present in the feature hierarchy from early training iterations.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.85\textwidth]{plots/DSIFN2.pdf}
-    \caption{Multi-temporal image samples and binary ground-truth change masks
-    from the DSIFN-CD benchmark \cite{Zhang2020FusionNetDSIFN}. Each row
-    displays the pre-event image (left), the co-registered post-event image
-    (centre), and the annotated binary change mask (right). The dataset's
-    heterogeneous imaging conditions and multi-class land-cover changes make
-    it a demanding benchmark for evaluating deep multi-scale supervision
-    strategies in building change detection.}
+\caption{Multi-temporal image samples and binary ground-truth change masks from the DSIFN-CD benchmark \cite{Zhang2020FusionNetDSIFN}. Each row displays the pre-event image (left), the co-registered post-event image (centre), and the annotated binary change mask (right). The dataset's heterogeneous imaging conditions and multi-class land-cover changes make it a demanding benchmark for evaluating deep multi-scale supervision strategies in building change detection.}
     \label{fig:dsifn_samples}
 \end{figure}
 
-The evolution from FC-EF through SNUNet-CD and DSIFN-CD established that
-expressive feature comparison mechanisms and multi-scale information
-preservation are essential for competitive BCD performance. However, all of
-these architectures remained constrained by the local receptive field of
-convolutions, unable to model the long-range spatial dependencies that
-distinguish genuine structural changes from coincidental spectral similarity.
-This limitation motivated the adoption of Transformer-based architectures.
+The evolution from FC-EF through SNUNet-CD and DSIFN-CD established that expressive feature comparison mechanisms and multi-scale information preservation are essential for competitive \ac{BCD} performance. However, all of these architectures remained constrained by the local receptive field of convolutions, unable to model the long-range spatial dependencies that distinguish genuine structural changes from coincidental spectral similarity. This limitation motivated the adoption of Transformer-based architectures.
 
 
 % =============================================================================
@@ -294,112 +123,50 @@ This limitation motivated the adoption of Transformer-based architectures.
 
 \subsection{Multi-Head Self-Attention: Formulation and Complexity}
 
-The Transformer architecture \cite{Vaswani2017Attention} introduced the
-\emph{self-attention} mechanism as a universal tool for modeling pairwise
-dependencies among elements of a sequence, without any locality constraint.
-Given an input token sequence represented as a matrix
-$X \in \mathbb{R}^{N \times d}$, where $N$ is the number of tokens and $d$
-is the embedding dimension, self-attention first computes three linear
-projections:
+The Transformer architecture \cite{Vaswani2017Attention} introduced the \emph{self-attention} mechanism as a universal tool for modeling pairwise dependencies among elements of a sequence, without any locality constraint (Figure~\ref{fig:mhsa}). Given an input token sequence represented as a matrix $X \in \mathbb{R}^{N \times d}$, where $N$ is the number of tokens and $d$ is the embedding dimension, self-attention first computes three linear projections:
 \begin{equation}
 Q = X W_Q, \qquad K = X W_K, \qquad V = X W_V,
 \label{eq:qkv}
 \end{equation}
-where $W_Q, W_K, W_V \in \mathbb{R}^{d \times d}$ are learned projection
-matrices. The query matrix $Q \in \mathbb{R}^{N \times d}$, key matrix
-$K \in \mathbb{R}^{N \times d}$, and value matrix $V \in \mathbb{R}^{N \times d}$
-encode, respectively, the information a token seeks, the information it
-provides as a retrieval target, and the information it contributes to the
-output.
+where $W_Q, W_K, W_V \in \mathbb{R}^{d \times d}$ are learned projection matrices. The query matrix $Q \in \mathbb{R}^{N \times d}$, key matrix $K \in \mathbb{R}^{N \times d}$, and value matrix $V \in \mathbb{R}^{N \times d}$ encode, respectively, the information a token seeks, the information it provides as a retrieval target, and the information it contributes to the output.
 
-\noindent\textbf{Softmax attention.}
-The scaled dot-product attention output is defined as
+\noindent\textbf{Softmax attention.} The scaled dot-product attention output is defined as
 \begin{equation}
 \mathrm{Attn}(Q, K, V)
     = \mathrm{softmax}\!\left(\frac{Q K^\top}{\sqrt{d}}\right) V,
 \label{eq:softmax_attention}
 \end{equation}
-where the division by $\sqrt{d}$ stabilizes the variance of the dot products
-prior to the softmax normalization. The intermediate matrix
-$A = \mathrm{softmax}(Q K^\top / \sqrt{d}) \in \mathbb{R}^{N \times N}$
-is the \emph{attention map}: each row $A_{i,:}$ encodes a probability
-distribution over all $N$ tokens, describing the relative importance of
-every token as a context source for token $i$. The final output is a
-weighted sum of value vectors, integrating global contextual information
-from the entire sequence into each token representation.
+where the division by $\sqrt{d}$ stabilizes the variance of the dot products prior to the softmax normalization. The intermediate matrix $A = \mathrm{softmax}(Q K^\top / \sqrt{d}) \in \mathbb{R}^{N \times N}$ is the \emph{attention map}: each row $A_{i,:}$ encodes a probability distribution over all $N$ tokens, describing the relative importance of every token as a context source for token $i$. The final output is a weighted sum of value vectors, integrating global contextual information from the entire sequence into each token representation.
 
-\noindent\textbf{Quadratic computational complexity.}
-Forming the full attention map $A$ requires computing the $N \times N$
-matrix product $Q K^\top$, which has time complexity $\mathcal{O}(N^2 d)$
-and demands $\mathcal{O}(N^2)$ memory for storage. In multi-head attention
-with $h$ independent heads, the total cost scales as $\mathcal{O}(h N^2 d)$,
-though reducing the per-head dimension to $d/h$ keeps the dominant term as
-$\mathcal{O}(N^2)$ in memory. The practical consequence for VHR building
-change detection is severe: a $256 \times 256$ patch yields $N = 65\,536$
-spatial tokens at the finest encoder stage, and a bi-temporal pipeline
-concatenating two such sequences before the attention module doubles the
-effective sequence length to $N = 131\,072$ tokens---a regime in which the
-$\mathcal{O}(N^2)$ memory demand becomes prohibitive under standard GPU
-memory budgets of 16--40~GB.
+\noindent\textbf{Quadratic computational complexity.} Forming the full attention map $A$ requires computing the $N \times N$ matrix product $Q K^\top$, which has time complexity $\mathcal{O}(N^2 d)$ and demands $\mathcal{O}(N^2)$ memory for storage. In multi-head attention with $h$ independent heads, the total cost scales as $\mathcal{O}(h N^2 d)$, though reducing the per-head dimension to $d/h$ keeps the dominant term as $\mathcal{O}(N^2)$ in memory. The practical consequence for \ac{VHR} building change detection is severe: a $256 \times 256$ patch yields $N = 65\,536$ spatial tokens at the finest encoder stage, and a bi-temporal pipeline concatenating two such sequences before the attention module doubles the effective sequence length to $N = 131\,072$ tokens a regime in which the $\mathcal{O}(N^2)$ memory demand becomes prohibitive under standard \ac{GPU} memory budgets of 16-40~GB.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.68\textwidth]{graficos/MHSA.png}
-    \caption{Multi-Head Self-Attention (MHSA) mechanism. Each head computes
-    independent query, key, and value projections, forming a dense $N\times N$
-    attention map before aggregating value features. The quadratic cost of
-    this map formation is the primary computational bottleneck for high-resolution
-    inputs.}
+\caption{Multi-Head Self-Attention (MHSA) mechanism  \cite{Vaswani2017Attention}. Each head computes independent query, key, and value projections, forming a dense $N\times N$ attention map before aggregating value features. The quadratic cost of this map formation is the primary computational bottleneck for high-resolution inputs.}
     \label{fig:mhsa}
 \end{figure}
 
 \subsection{Hierarchical Vision Transformers and ChangeFormer}
 
-\cite{Dosovitskiy2021ViT} introduced the Vision Transformer (ViT), which
-partitions an image into a grid of non-overlapping patches, linearly embeds
-each patch into a token vector, and applies a standard Transformer encoder.
-The pure sequence processing of ViT treats the image as a flat token set,
-which is effective for image classification but requires high-resolution inputs
-to be significantly downsampled before patching, limiting spatial detail
-in dense prediction tasks.
+The \ac{ViT} \cite{Dosovitskiy2021ViT} partitions an image into a grid of non-overlapping patches, linearly embeds each patch into a token vector, and applies a standard Transformer encoder. The pure sequence processing of \ac{ViT} treats the image as a flat token set, which is effective for image classification but requires high-resolution inputs to be significantly downsampled before patching, limiting spatial detail in dense prediction tasks.
 
-\cite{Liu2021Swin} proposed the Swin Transformer, which reintroduces spatial
-inductive biases into the Transformer framework through a hierarchical feature
-pyramid and a shifted-window attention strategy. Swin computes self-attention
-within local, non-overlapping windows of fixed size $M \times M$, reducing
-the per-layer attention complexity from $\mathcal{O}(N^2)$ to
-$\mathcal{O}(M^2 N)$, where $M \ll N$. Cross-window interaction is achieved
-by cyclically shifting the partition between consecutive layers. The hierarchical
-design produces multi-scale feature maps analogous to convolutional pyramids,
-enabling dense prediction without the quadratic cost of global attention.
+The Swin Transformer \cite{Liu2021Swin} reintroduces spatial inductive biases into the Transformer framework through a hierarchical feature pyramid and a shifted-window attention strategy. Swin computes self-attention within local, non-overlapping windows of fixed size $M \times M$, reducing the per-layer attention complexity from $\mathcal{O}(N^2)$ to $\mathcal{O}(M^2 N)$, where $M \ll N$. Cross-window interaction is achieved by cyclically shifting the partition between consecutive layers. The hierarchical design produces multi-scale feature maps analogous to convolutional pyramids, enabling dense prediction without the quadratic cost of global attention.
 
-\cite{Bandara2022ChangeFormer} introduced ChangeFormer, the primary baseline
-for this thesis. ChangeFormer is a hierarchical Siamese encoder-decoder
-architecture that processes bi-temporal VHR images $I_{t_1}$ and $I_{t_2}$
-through shared convolutional-Transformer encoder blocks, producing multi-scale
-feature maps
+ChangeFormer \cite{Bandara2022ChangeFormer}, the primary baseline for this thesis, is a hierarchical Siamese encoder-decoder architecture that processes bi-temporal \ac{VHR} images $I_{t_1}$ and $I_{t_2}$ through shared convolutional-Transformer encoder blocks, producing multi-scale feature maps
 \begin{equation}
 F_{t_1}^{(l)},\; F_{t_2}^{(l)} \in \mathbb{R}^{H_l \times W_l \times C_l},
 \quad l = 1, \ldots, L,
 \label{eq:multiscale_features}
 \end{equation}
-where $H_l$ and $W_l$ decrease and $C_l$ increases with depth level $l$.
-At each scale $l$, the bi-temporal feature maps are concatenated channel-wise
-and projected into a token sequence via a lightweight patch embedding:
+where $H_l$ and $W_l$ decrease and $C_l$ increases with depth level $l$. At each scale $l$, the bi-temporal feature maps are concatenated channel-wise and projected into a token sequence via a lightweight patch embedding:
 \begin{equation}
 X^{(l)} = \mathrm{PatchEmbed}\!\left(F_{t_1}^{(l)} \,\Vert\, F_{t_2}^{(l)}\right)
     \in \mathbb{R}^{N_l \times C_l},
 \quad N_l = H_l W_l.
 \label{eq:patchembedding}
 \end{equation}
-Each token sequence $X^{(l)}$ is then processed by a Transformer block
-containing MHSA followed by a feed-forward network (FFN), which refines the
-joint bi-temporal representation before the decoder fuses and upsamples the
-multi-scale outputs into the binary change mask. Because ChangeFormer applies
-MHSA globally at each scale without the windowed restriction of Swin, the
-quadratic cost $\mathcal{O}(N_l^2)$ is paid in full at every encoder level,
-making the decoder the dominant computational bottleneck for high-resolution
-inputs.
+Each token sequence $X^{(l)}$ is then processed by a Transformer block containing \ac{MHSA} followed by a \ac{FFN}, which refines the joint bi-temporal representation before the decoder fuses and upsamples the multi-scale outputs into the binary change mask. Because ChangeFormer applies \ac{MHSA} globally at each scale without the windowed restriction of Swin, the quadratic cost $\mathcal{O}(N_l^2)$ is paid in full at every encoder level, making the decoder the dominant computational bottleneck for high-resolution inputs.
 
 
 % =============================================================================
@@ -409,173 +176,79 @@ inputs.
 
 \subsection{Linear Attention and the Key-Value Buffer}
 
-A principled approach to reducing the quadratic cost of softmax attention is to
-replace the softmax kernel with a positive-definite feature map
-$\kappa: \mathbb{R}^d \to \mathbb{R}^{d'}$, such that 
-$\kappa(q)^\top \kappa(k) \approx \exp(q^\top k / \sqrt{d})$ for all vectors
-$q, k \in \mathbb{R}^d$. As originally introduced in the definitive framework of
-\cite{Katharopoulos2020Linear}, this strategic substitution yields the 
-standardized \emph{linear attention} formulation:
+A principled approach to reducing the quadratic cost of softmax attention is to replace the softmax kernel with a positive-definite feature map $\kappa: \mathbb{R}^d \to \mathbb{R}^{d'}$, such that $\kappa(q)^\top \kappa(k) \approx \exp(q^\top k / \sqrt{d})$ for all vectors $q, k \in \mathbb{R}^d$. This substitution, first formalized in \cite{Katharopoulos2020Linear}, yields the standard \emph{linear attention} formulation:
 \begin{equation}
 \mathrm{Attn}_{\mathrm{lin}}(Q, K, V)
     = \kappa(Q)\,\bigl(\kappa(K)^\top V\bigr),
 \label{eq:linear_attention}
 \end{equation}
-where $\kappa(Q) \in \mathbb{R}^{N \times d}$ and
-$\kappa(K) \in \mathbb{R}^{N \times d}$ are the row-wise applications of
-$\kappa$ to $Q$ and $K$. The critical algebraic observation is that matrix
-multiplication is associative: rather than computing the $N \times N$
-intermediate product $\kappa(Q)\kappa(K)^\top$ at cost $\mathcal{O}(N^2 d)$,
-one can first compute
+where $\kappa(Q) \in \mathbb{R}^{N \times d}$ and $\kappa(K) \in \mathbb{R}^{N \times d}$ are the row-wise applications of $\kappa$ to $Q$ and $K$. The critical algebraic observation is that matrix multiplication is associative: rather than computing the $N \times N$ intermediate product $\kappa(Q)\kappa(K)^\top$ at cost $\mathcal{O}(N^2 d)$, one can first compute
 \begin{equation}
 B = \kappa(K)^\top V \in \mathbb{R}^{d \times d},
 \label{eq:kv_buffer}
 \end{equation}
-at cost $\mathcal{O}(N d^2)$, and then compute each output token as
-$\kappa(Q_i) B$ at cost $\mathcal{O}(N d^2)$, reducing the total attention
-computation from $\mathcal{O}(N^2 d)$ to $\mathcal{O}(N d^2)$. Since $d$ is
-a fixed architectural hyperparameter (e.g., $d = 64$ per head) while
-$N$ scales with image resolution, this reduction is asymptotically from
-$\mathcal{O}(N^2)$ to $\mathcal{O}(N)$ in the dominant term. The matrix $B$
-in Equation~\ref{eq:kv_buffer} serves as a global \emph{key-value buffer}
-that aggregates information from the entire token sequence into a compact
-$d \times d$ summary.
+at cost $\mathcal{O}(N d^2)$, and then compute each output token as $\kappa(Q_i) B$ at cost $\mathcal{O}(N d^2)$, reducing the total attention computation from $\mathcal{O}(N^2 d)$ to $\mathcal{O}(N d^2)$. Since $d$ is a fixed architectural hyperparameter (e.g., $d = 64$ per head) while $N$ scales with image resolution, this reduction is asymptotically from $\mathcal{O}(N^2)$ to $\mathcal{O}(N)$ in the dominant term. The matrix $B$ in Equation~\ref{eq:kv_buffer} serves as a global \emph{key-value buffer} that aggregates information from the entire token sequence into a compact $d \times d$ summary.
 
-Related efficient attention approaches extend this idea through different
-approximation strategies: Performers \cite{Choromanski2021Performer} use random
-feature maps to approximate the softmax kernel, Linformer
-\cite{Wang2020Linformer} projects the key and value matrices into a
-lower-dimensional space, Nystr\"{o}mformer \cite{Xiong2021Nystromformer}
-approximates the attention matrix via Nystr\"{o}m decomposition, and Swin
-Transformer \cite{Liu2021Swin} restricts self-attention to local windows.
-Sparsifiner \cite{Wei2023Sparsifiner} learns instance-dependent sparse
-attention patterns. Despite their theoretical appeal, these methods share a
-common failure mode under dense prediction settings.
+Related efficient attention approaches extend this idea through different approximation strategies: Performers \cite{Choromanski2021Performer} use random feature maps to approximate the softmax kernel, Linformer \cite{Wang2020Linformer} projects the key and value matrices into a lower-dimensional space, Nystr\"{o}mformer \cite{Xiong2021Nystromformer} approximates the attention matrix via Nystr\"{o}m decomposition, and Swin Transformer \cite{Liu2021Swin} restricts self-attention to local windows. Sparsifiner \cite{Wei2023Sparsifiner} learns instance-dependent sparse attention patterns. Despite their theoretical appeal, these methods share a common failure mode under dense prediction settings.
 
 \subsection{Rank Collapse in the Key-Value Buffer}
 
-The fundamental pathology of standard linear attention in dense prediction is
-\emph{rank collapse} of the key-value buffer $B$. In practice, the key vectors
-$K_j \in \mathbb{R}^d$ for $j = 1, \ldots, N$ tend to cluster in a
-low-dimensional subspace due to the shared encoder weights and the similar
-spatial statistics of neighboring tokens in an image. When many key vectors
-are nearly collinear, the outer products $\kappa(K_j)^\top V_j$ in the
-accumulation
+The fundamental pathology of standard linear attention in dense prediction is \emph{rank collapse} of the key-value buffer $B$. In practice, the key vectors $K_j \in \mathbb{R}^d$ for $j = 1, \ldots, N$ tend to cluster in a low-dimensional subspace due to the shared encoder weights and the similar spatial statistics of neighboring tokens in an image. When many key vectors are nearly collinear, the outer products $\kappa(K_j)^\top V_j$ in the accumulation
 \begin{equation}
 B = \sum_{j=1}^{N} \kappa(K_j)^\top V_j
 \label{eq:standard_kv_buffer}
 \end{equation}
-span only a small subspace of $\mathbb{R}^{d \times d}$, resulting in a
-buffer of effective rank $r \ll d$. A low-rank buffer is structurally
-equivalent to a lossy projection: the global context representation $B$
-discards the spatial diversity of the token sequence, collapsing it into a
-compressed summary that cannot distinguish fine-grained structural differences
-between building edges, construction materials, or spatial configurations.
-In the context of BCD, where precise boundary delineation at sub-building
-spatial granularity is required to accurately segment newly constructed
-structures, this rank collapse translates directly into degraded segmentation
-accuracy and loss of change boundary precision. This failure mode, which
-\cite{Fan2025RALA} formally characterizes across multiple dense prediction
-benchmarks, was consistently observed in earlier linear attention variants.
+span only a small subspace of $\mathbb{R}^{d \times d}$, resulting in a buffer of effective rank $r \ll d$. A low-rank buffer is structurally equivalent to a lossy projection: the global context representation $B$ discards the spatial diversity of the token sequence, collapsing it into a compressed summary that cannot distinguish fine-grained structural differences between building edges, construction materials, or spatial configurations. In the context of \ac{BCD}, where precise boundary delineation at sub-building spatial granularity is required to accurately segment newly constructed structures, this rank collapse translates directly into degraded segmentation accuracy and loss of change boundary precision. This failure mode, formally characterized across multiple dense prediction benchmarks in \cite{Fan2025RALA}, was consistently observed in earlier linear attention variants.
 
 \subsection{RALA: Rank Augmentation via Global Query Weighting}
 
-\cite{Fan2025RALA} addresses rank collapse through a two-component mechanism:
-a learned, token-wise reweighting of key-value contributions to the buffer,
-and a channel-wise output modulation that restores per-token feature diversity.
-Together, these components constitute Rank-Augmented Linear Attention (RALA).
+\ac{RALA} \cite{Fan2025RALA} addresses rank collapse through a two-component mechanism: a learned, token-wise reweighting of key-value contributions to the buffer, and a channel-wise output modulation that restores per-token feature diversity. Together, these components constitute \ac{RALA}.
 
-The first component augments the rank of $B$ by replacing the uniform token
-aggregation in Equation~\ref{eq:standard_kv_buffer} with a
-\emph{token-relevance-weighted} accumulation. RALA introduces a
-\emph{global query descriptor}:
+The first component augments the rank of $B$ by replacing the uniform token aggregation in Equation~\ref{eq:standard_kv_buffer} with a \emph{token-relevance-weighted} accumulation. \ac{RALA} introduces a \emph{global query descriptor}:
 \begin{equation}
 Q_g = \frac{1}{N} \sum_{i=1}^{N} Q_i \in \mathbb{R}^{1 \times d},
 \label{eq:global_query}
 \end{equation}
-which encodes the average semantic query intent of the entire token sequence.
-Using $Q_g$ as a probe, RALA computes a scalar relevance weight for each key
-$K_j$ via a softmax normalization:
+which encodes the average semantic query intent of the entire token sequence. Using $Q_g$ as a probe, \ac{RALA} computes a scalar relevance weight for each key $K_j$ via a softmax normalization:
 \begin{equation}
 \alpha_j = N \times
     \frac{\exp\!\left(Q_g \,\kappa(K_j)^\top\right)}
     {\displaystyle\sum_{m=1}^{N} \exp\!\left(Q_g \,\kappa(K_m)^\top\right)},
 \label{eq:alpha_softmax}
 \end{equation}
-where the factor of $N$ preserves the expected magnitude of the buffer. The
-weight $\alpha_j \in \mathbb{R}_{>0}$ is large for tokens whose key $K_j$
-is semantically aligned with the global query descriptor $Q_g$, and small for
-tokens whose keys are weakly relevant. The rank-augmented key-value buffer
-is then:
+where the factor of $N$ preserves the expected magnitude of the buffer. The weight $\alpha_j \in \mathbb{R}_{>0}$ is large for tokens whose key $K_j$ is semantically aligned with the global query descriptor $Q_g$, and small for tokens whose keys are weakly relevant. The rank-augmented key-value buffer is then:
 \begin{equation}
 B = \sum_{j=1}^{N} \alpha_j \, \kappa(K_j)^\top V_j \in \mathbb{R}^{d \times d}.
 \label{eq:rala_buffer}
 \end{equation}
-Because information-rich tokens receive disproportionately large weights, the
-effective contribution of each token to $B$ is no longer uniform. Key vectors
-from semantically distinct spatial locations contribute distinct outer products
-$\kappa(K_j)^\top V_j$ with amplified magnitudes, increasing the span of the
-accumulated outer products and thereby increasing $\mathrm{rank}(B)$ relative
-to the standard uniform accumulation in Equation~\ref{eq:standard_kv_buffer}.
+Because information-rich tokens receive disproportionately large weights, the effective contribution of each token to $B$ is no longer uniform. Key vectors from semantically distinct spatial locations contribute distinct outer products $\kappa(K_j)^\top V_j$ with amplified magnitudes, increasing the span of the accumulated outer products and thereby increasing $\mathrm{rank}(B)$ relative to the standard uniform accumulation in Equation~\ref{eq:standard_kv_buffer}.
 
 \subsection{Output Feature Modulation and the Rank Inequality}
 
-Even when the rank-augmentation mechanism of Equation~\ref{eq:rala_buffer}
-raises $\mathrm{rank}(B)$ to its maximum value of $d$, the output features
-obtained from
+Even when the rank-augmentation mechanism of Equation~\ref{eq:rala_buffer} raises $\mathrm{rank}(B)$ to its maximum value of $d$, the output features obtained from
 \begin{equation}
 Z_i = \kappa(Q_i)\, B \in \mathbb{R}^{d}
 \label{eq:Z_pre_modulation}
 \end{equation}
-may still occupy a low-rank subspace. This follows from a fundamental matrix
-rank inequality. Let $\tilde{Q} = [\kappa(Q_1)^\top, \ldots, \kappa(Q_N)^\top]^\top
-\in \mathbb{R}^{N \times d}$. Then the output matrix
-$Z = \tilde{Q} B$ satisfies
+may still occupy a low-rank subspace. This follows from a fundamental matrix rank inequality. Let $\tilde{Q} = [\kappa(Q_1)^\top, \ldots, \kappa(Q_N)^\top]^\top \in \mathbb{R}^{N \times d}$. Then the output matrix $Z = \tilde{Q} B$ satisfies
 \begin{equation}
 \mathrm{rank}(Z)
     \leq \min\!\bigl(\mathrm{rank}(\tilde{Q}),\; \mathrm{rank}(B)\bigr)
     \leq d.
 \label{eq:rank_inequality}
 \end{equation}
-This inequality establishes that the expressible rank of the output cannot
-exceed the rank of the more restrictive factor. In remote sensing imagery,
-the query vectors $Q_i = X_i W_Q$ are derived from convolutional or
-patch-embedding token features that exhibit strong spatial autocorrelation:
-adjacent pixels share similar textures, and entire homogeneous building regions
-generate nearly identical query representations. Consequently,
-$\mathrm{rank}(\tilde{Q}) \ll d$, and the inequality in
-Equation~\ref{eq:rank_inequality} guarantees that $\mathrm{rank}(Z) \ll d$
-even when $B$ is full-rank, resulting in a collapsed output that cannot
-represent the per-token spatial diversity required for accurate boundary
-segmentation.
+This inequality establishes that the expressible rank of the output cannot exceed the rank of the more restrictive factor. In remote sensing imagery, the query vectors $Q_i = X_i W_Q$ are derived from convolutional or patch-embedding token features that exhibit strong spatial autocorrelation: adjacent pixels share similar textures, and entire homogeneous building regions generate nearly identical query representations. Consequently, $\mathrm{rank}(\tilde{Q}) \ll d$, and the inequality in Equation~\ref{eq:rank_inequality} guarantees that $\mathrm{rank}(Z) \ll d$ even when $B$ is full-rank, resulting in a collapsed output that cannot represent the per-token spatial diversity required for accurate boundary segmentation.
 
-RALA corrects this structural deficiency through a \emph{token-wise output
-modulation} step. Rather than using $Z_i$ directly as the attention output,
-RALA applies a token-specific transform $\phi(\cdot)$ to the original input
-token $X_i$ and combines it with $Z_i$ via the Hadamard (element-wise) product:
+\ac{RALA} corrects this structural deficiency through a \emph{token-wise output modulation} step. Rather than using $Z_i$ directly as the attention output, \ac{RALA} applies a token-specific transform $\phi(\cdot)$ to the original input token $X_i$ and combines it with $Z_i$ via the Hadamard (element-wise) product:
 \begin{equation}
 Y_i = \phi(X_i) \odot \bigl(\kappa(Q_i)\, B\bigr),
 \label{eq:Yi_modulated}
 \end{equation}
-where $\phi: \mathbb{R}^{d} \to \mathbb{R}^{d}$ is a learned per-token
-transformation (implemented as a lightweight gated linear unit applied
-channel-wise) and $\odot$ denotes the Hadamard product. The term $\phi(X_i)$
-injects token-specific local information into the output, effectively acting
-as a channel-wise gate that modulates the global context signal $\kappa(Q_i) B$
-with local per-token features. Because $\phi(X_i)$ differs for each token $i$
-by construction, the modulated output matrix
-$Y = [\phi(X_1) \odot Z_1, \ldots, \phi(X_N) \odot Z_N]^\top$ can achieve
-a rank up to $d$ independently of $\mathrm{rank}(\tilde{Q})$, breaking the
-constraint imposed by Equation~\ref{eq:rank_inequality}. Critically, the
-Hadamard product and $\phi(\cdot)$ operate channel-wise without introducing
-any $N \times N$ pairwise computation, so the overall time and memory
-complexity of RALA remains $\mathcal{O}(N d^2)$---linear in $N$ and independent
-of the quadratic bottleneck of standard softmax attention.
+where $\phi: \mathbb{R}^{d} \to \mathbb{R}^{d}$ is a learned per-token transformation (implemented as a lightweight gated linear unit applied channel-wise) and $\odot$ denotes the Hadamard product. The term $\phi(X_i)$ injects token-specific local information into the output, effectively acting as a channel-wise gate that modulates the global context signal $\kappa(Q_i) B$ with local per-token features. Because $\phi(X_i)$ differs for each token $i$ by construction, the modulated output matrix $Y = [\phi(X_1) \odot Z_1, \ldots, \phi(X_N) \odot Z_N]^\top$ can achieve a rank up to $d$ independently of $\mathrm{rank}(\tilde{Q})$, breaking the constraint imposed by Equation~\ref{eq:rank_inequality}. Critically, the Hadamard product and $\phi(\cdot)$ operate channel-wise without introducing any $N \times N$ pairwise computation, so the overall time and memory complexity of \ac{RALA} remains $\mathcal{O}(N d^2)$ linear in $N$ and independent of the quadratic bottleneck of standard softmax attention.
 
 \subsection{RALA Feature-Flow Schematic}
 
-Figure~\ref{fig:rala_flow} summarizes the complete RALA computation graph
-within a single attention block, from input token sequence to modulated output.
+Figure~\ref{fig:rala_flow} summarizes the complete \ac{RALA} computation graph within a single attention block, from input token sequence to modulated output.
 
 \begin{figure}[ht]
 \centering
@@ -634,28 +307,17 @@ within a single attention block, from input token sequence to modulated output.
 \foreach \a/\b in {A/B, B/C, C/D, D/E, E/F, F/G}
     \draw[->, thick] (\a) -- (\b);
 \end{tikzpicture}
-\caption{RALA feature-flow within a single attention block. Stages~(1)--(2)
-are common to all attention mechanisms. Stages~(3)--(5) perform rank
-augmentation by computing the global query descriptor $Q_g$, deriving
-token relevance weights $\alpha_j$, and accumulating the rank-augmented
-KV buffer $B$. Stages~(6)--(7) produce the modulated output via the Hadamard
-product with the token-specific transform $\phi(X_i)$, restoring per-token
-feature diversity without reintroducing quadratic cost.}
+\caption{RALA feature-flow within a single attention block \cite{Fan2025RALA}. Stages~(1)-(2) are common to all attention mechanisms. Stages~(3)-(5) perform rank augmentation by computing the global query descriptor $Q_g$, deriving token relevance weights $\alpha_j$, and accumulating the rank-augmented KV buffer $B$. Stages~(6)-(7) produce the modulated output via the Hadamard product with the token-specific transform $\phi(X_i)$, restoring per-token feature diversity without reintroducing quadratic cost.}
 \label{fig:rala_flow}
 \end{figure}
 
 \subsection{Computational Complexity Summary}
 
-Table~\ref{tab:complexity} summarizes the time and memory complexity of
-standard MHSA versus RALA for a sequence of $N$ tokens with embedding
-dimension $d$. Since $N \gg d$ for all encoder levels of ChangeFormer
-operating on VHR imagery (e.g., $N = 4096$ versus $d = 64$ at the coarsest
-level), the reduction is substantial in practice.
+Table~\ref{tab:complexity} summarizes the time and memory complexity of standard \ac{MHSA} versus \ac{RALA} for a sequence of $N$ tokens with embedding dimension $d$. Since $N \gg d$ for all encoder levels of ChangeFormer operating on \ac{VHR} imagery (e.g., $N = 4096$ versus $d = 64$ at the coarsest level), the reduction is substantial in practice.
 
 \begin{table}[ht]
 \centering
-\caption{Asymptotic time and memory complexity of standard MHSA and RALA
-for a token sequence of length $N$ with embedding dimension $d$.}
+\caption{Asymptotic time and memory complexity of standard MHSA and RALA for a token sequence of length $N$ with embedding dimension $d$.}
 \label{tab:complexity}
 \begin{tabularx}{0.75\textwidth}{Xcc}
 \hline
@@ -667,15 +329,7 @@ RALA \cite{Fan2025RALA}           & $\mathcal{O}(N d^2)$ & $\mathcal{O}(d^2)$ \\
 \end{tabularx}
 \end{table}
 
-The $\mathcal{O}(N^2)$ memory cost of MHSA arises from storing the dense
-$N \times N$ attention map; RALA replaces this with the $d \times d$ buffer
-$B$, whose size is independent of the sequence length $N$. As established
-through the controlled profiling experiments presented in
-Chapter~\ref{chap:experiments}, this substitution yields a 22~percent reduction
-in peak GPU memory consumption and a 50~percent increase in the maximum
-feasible training batch size at standard processing resolutions. These
-efficiency gains constitute the primary motivation for integrating RALA into
-the ChangeFormer encoder, as fully described in Chapter~\ref{chap:method}.
+The $\mathcal{O}(N^2)$ memory cost of \ac{MHSA} arises from storing the dense $N \times N$ attention map; \ac{RALA} replaces this with the $d \times d$ buffer $B$, whose size is independent of the sequence length $N$. As established through the controlled profiling experiments presented in Chapter~\ref{chap:experiments}, this substitution yields a 22~percent reduction in peak \ac{GPU} memory consumption and a 50~percent increase in the maximum feasible training batch size at standard processing resolutions. These efficiency gains constitute the primary motivation for integrating \ac{RALA} into the ChangeFormer encoder, as fully described in Chapter~\ref{chap:method}.
 
 
 % =============================================================================
@@ -683,35 +337,25 @@ the ChangeFormer encoder, as fully described in Chapter~\ref{chap:method}.
 \label{sec:metrics}
 % =============================================================================
 
-Building change detection is evaluated as a binary dense prediction task in
-which the positive class corresponds to changed pixels and the negative class
-to unchanged pixels. The standard performance metrics are derived from the
-entries of the pixel-level confusion matrix: true positives ($\mathrm{TP}$),
-false positives ($\mathrm{FP}$), true negatives ($\mathrm{TN}$), and false
-negatives ($\mathrm{FN}$).
+Building change detection is evaluated as a binary dense prediction task in which the positive class corresponds to changed pixels and the negative class to unchanged pixels. The standard performance metrics are derived from the entries of the pixel-level confusion matrix: true positives ($\mathrm{TP}$), false positives ($\mathrm{FP}$), true negatives ($\mathrm{TN}$), and false negatives ($\mathrm{FN}$).
 
-\noindent\textbf{Precision} measures the fraction of predicted-positive pixels
-that are genuinely changed:
+\noindent\textbf{Precision} measures the fraction of predicted-positive pixels that are genuinely changed:
 \begin{equation}
 \mathrm{Precision}
     = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}}.
 \label{eq:precision}
 \end{equation}
-A high precision indicates that the model rarely labels unchanged pixels as
-changed, at the potential cost of missing some genuine changes.
+A high precision indicates that the model rarely labels unchanged pixels as changed, at the potential cost of missing some genuine changes.
 
-\noindent\textbf{Recall} (also called sensitivity or true positive rate)
-measures the fraction of genuinely changed pixels that are correctly detected:
+\noindent\textbf{Recall} (also called sensitivity or true positive rate) measures the fraction of genuinely changed pixels that are correctly detected:
 \begin{equation}
 \mathrm{Recall}
     = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.
 \label{eq:recall}
 \end{equation}
-A high recall indicates that the model detects most real changes, potentially
-at the cost of an elevated false alarm rate.
+A high recall indicates that the model detects most real changes, potentially at the cost of an elevated false alarm rate.
 
-\noindent\textbf{F1-Score} is the harmonic mean of precision and recall,
-providing a single scalar summary that balances both:
+\noindent\textbf{F1-Score} is the harmonic mean of precision and recall, providing a single scalar summary that balances both:
 \begin{equation}
 F_1
     = \frac{2 \cdot \mathrm{Precision} \cdot \mathrm{Recall}}
@@ -719,39 +363,22 @@ F_1
     = \frac{2\,\mathrm{TP}}{2\,\mathrm{TP} + \mathrm{FP} + \mathrm{FN}}.
 \label{eq:f1}
 \end{equation}
-The F1-score is the primary accuracy metric in this thesis because it directly
-addresses the class imbalance between changed and unchanged pixels: a model
-that trivially predicts no-change everywhere achieves $F_1 = 0$, regardless
-of the high accuracy that such a strategy would produce on a pixel-accuracy
-metric.
+The F1-score is the primary accuracy metric in this thesis because it directly addresses the class imbalance between changed and unchanged pixels: a model that trivially predicts no-change everywhere achieves $F_1 = 0$, regardless of the high accuracy that such a strategy would produce on a pixel-accuracy metric.
 
-\noindent\textbf{Intersection over Union (IoU)} is defined as the ratio of
-the area of intersection to the area of union between the predicted change
-mask $\hat{Y}$ and the ground-truth mask $Y$:
+\noindent\textbf{\ac{IoU}} is defined as the ratio of the area of intersection to the area of union between the predicted change mask $\hat{Y}$ and the ground-truth mask $Y$:
 \begin{equation}
 \mathrm{IoU}
     = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP} + \mathrm{FN}}.
 \label{eq:iou}
 \end{equation}
-IoU is geometrically interpretable as the overlap coefficient of two binary
-sets and is widely used in semantic segmentation tasks. It is a stricter metric
-than $F_1$, penalizing both missed detections and false alarms more severely
-for the same absolute counts of $\mathrm{FP}$ and $\mathrm{FN}$.
+\ac{IoU} is geometrically interpretable as the overlap coefficient of two binary sets and is widely used in semantic segmentation tasks. It is a stricter metric than $F_1$, penalizing both missed detections and false alarms more severely for the same absolute counts of $\mathrm{FP}$ and $\mathrm{FN}$.
 
-The relationship between these metrics is illustrated in
-Figure~\ref{fig:metrics}: the precision-recall trade-off defines the
-operational performance envelope of a change detection model, with the $F_1$
-score marking the point of balanced performance and the IoU providing a
-complementary geometric measure of localization accuracy.
+The relationship between these metrics is illustrated in Figure~\ref{fig:metrics}: the precision-recall trade-off defines the operational performance envelope of a change detection model, with the $F_1$ score marking the point of balanced performance and the \ac{IoU} providing a complementary geometric measure of localization accuracy.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.60\textwidth]{graficos/ROCvsPC.pdf}
-    \caption{Precision-recall curve for a representative change detection
-    model. The $F_1$-score corresponds to the iso-line on which precision
-    and recall contribute equally to the harmonic mean; the IoU represents
-    the normalized area of intersection between the predicted and
-    ground-truth change masks.}
+\caption{Precision-recall curve for a representative change detection model. The $F_1$-score corresponds to the iso-line on which precision and recall contribute equally to the harmonic mean; the IoU represents the normalized area of intersection between the predicted and ground-truth change masks.}
     \label{fig:metrics}
 \end{figure}
 
@@ -761,39 +388,8 @@ complementary geometric measure of localization accuracy.
 \label{sec:bg-final}
 % =============================================================================
 
-The theoretical material presented in this chapter establishes the complete
-formal substrate required to understand the proposed RALA-ChangeFormer
-architecture. The satellite imaging framework of Section~\ref{sec:sat-imagery}
-motivates the specific technical requirements of the approach: VHR spatial
-resolution is necessary to resolve building-level structural changes, and
-bi-temporal acquisitions over Lima Metropolitan Area via PeruSAT-1 define the
-target operational domain. The BCD problem formulation in
-Section~\ref{sec:bcd-prelim} establishes that accurate, spatially precise
-change masks are required, making dense binary segmentation the appropriate
-task formulation and $F_1$ and IoU the appropriate evaluation metrics.
+The theoretical material presented in this chapter establishes the complete formal substrate required to understand the proposed RALA-ChangeFormer architecture. The satellite imaging framework of Section~\ref{sec:sat-imagery} motivates the specific technical requirements of the approach: \ac{VHR} spatial resolution is necessary to resolve building-level structural changes, and bi-temporal acquisitions over Lima Metropolitan Area via PeruSAT-1 define the target operational domain. The \ac{BCD} problem formulation in Section~\ref{sec:bcd-prelim} establishes that accurate, spatially precise change masks are required, making dense binary segmentation the appropriate task formulation and $F_1$ and \ac{IoU} the appropriate evaluation metrics.
 
-The convolutional Siamese architectures reviewed in
-Section~\ref{sec:siamese-conv} illustrate the representational limitation that
-motivates the Transformer paradigm: the local receptive field of convolutions
-prevents these models from integrating the broad spatial context necessary to
-disambiguate genuine structural changes from radiometric artifacts. The
-hierarchical Vision Transformer analysis of Section~\ref{sec:transformers-attn}
-demonstrates that attention-based architectures resolve this locality limitation
-but introduce a new practical constraint: the quadratic $\mathcal{O}(N^2)$
-memory cost of MHSA renders full-resolution VHR processing infeasible under
-standard GPU budgets, specifically limiting ChangeFormer to small batch sizes
-and preventing systematic evaluation at native 1024$\times$1024 resolution.
+The convolutional Siamese architectures reviewed in Section~\ref{sec:siamese-conv} illustrate the representational limitation that motivates the Transformer paradigm: the local receptive field of convolutions prevents these models from integrating the broad spatial context necessary to disambiguate genuine structural changes from radiometric artifacts. The hierarchical Vision Transformer analysis of Section~\ref{sec:transformers-attn} demonstrates that attention-based architectures resolve this locality limitation but introduce a new practical constraint: the quadratic $\mathcal{O}(N^2)$ memory cost of \ac{MHSA} renders full-resolution \ac{VHR} processing infeasible under standard \ac{GPU} budgets, specifically limiting ChangeFormer to small batch sizes and preventing systematic evaluation at native 1024$\times$1024 resolution.
 
-The RALA theory of Section~\ref{sec:rala-theory} establishes that this
-quadratic bottleneck can be eliminated through rank-augmented linear attention
-without accuracy degradation, provided that both the KV buffer and the output
-features are actively protected against rank collapse through the global query
-reweighting mechanism and the Hadamard modulation step. The formal rank
-inequality of Equation~\ref{eq:rank_inequality} makes precise why both
-components are necessary: augmenting the rank of $B$ alone is insufficient
-when $\mathrm{rank}(\kappa(Q)) < d$, which is the typical condition for
-spatially correlated remote sensing tokens. Chapter~\ref{chap:method}
-describes how this integrated mechanism is concretely incorporated into
-the ChangeFormer encoder, and Chapter~\ref{chap:experiments} provides
-the empirical verification of the resulting accuracy-efficiency trade-offs
-across the six-dataset benchmark suite.
+The \ac{RALA} theory of Section~\ref{sec:rala-theory} establishes that this quadratic bottleneck can be eliminated through rank-augmented linear attention without accuracy degradation, provided that both the \ac{KV} buffer and the output features are actively protected against rank collapse through the global query reweighting mechanism and the Hadamard modulation step. The formal rank inequality of Equation~\ref{eq:rank_inequality} makes precise why both components are necessary: augmenting the rank of $B$ alone is insufficient when $\mathrm{rank}(\kappa(Q)) < d$, which is the typical condition for spatially correlated remote sensing tokens. Chapter~\ref{chap:method} describes how this integrated mechanism is concretely incorporated into the ChangeFormer encoder, and Chapter~\ref{chap:experiments} provides the empirical verification of the resulting accuracy-efficiency trade-offs across the six-dataset benchmark suite.

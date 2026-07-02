@@ -6,90 +6,15 @@
 \label{sec:conclusions-general}
 % =============================================================================
 
-This thesis has investigated a fundamental tension at the intersection of
-computational efficiency and representational fidelity in attention-based
-building change detection from very high-resolution satellite imagery: whether
-the quadratic memory bottleneck of standard Multi-Head Self-Attention can be
-eliminated through a principled rank-augmentation of its key-value buffer,
-and whether the resulting linear-complexity mechanism can be substituted
-drop-in within a state-of-the-art hierarchical Siamese Transformer without
-incurring meaningful accuracy degradation across a diverse multi-dataset
-evaluation suite. The experimental program documented in
-Chapter~\ref{chap:experiments} provides a comprehensive and affirmative answer
-to both questions.
+This thesis has investigated a fundamental tension at the intersection of computational efficiency and representational fidelity in attention-based building change detection from very high-resolution satellite imagery: whether the quadratic memory bottleneck of standard Multi-Head Self-Attention can be eliminated through a principled rank-augmentation of its key-value buffer, and whether the resulting linear-complexity mechanism can be substituted drop-in within a state-of-the-art hierarchical Siamese Transformer without incurring meaningful accuracy degradation across a diverse multi-dataset evaluation suite. The experimental program documented in Chapter~\ref{chap:experiments} provides a comprehensive and affirmative answer to both questions.
 
-The central architectural contribution is RALA-ChangeFormer: a hierarchical
-Siamese encoder-decoder for bi-temporal building change detection in which every
-Multi-Head Self-Attention block within the SegFormer-B2 encoder is replaced by
-a Rank-Augmented Linear Attention block \cite{Fan2025RALA}. The substitution
-maps the attention-related time complexity from $\mathcal{O}(N_l^2 d)$ to
-$\mathcal{O}(N_l d^2)$ and the memory complexity from $\mathcal{O}(N_l^2)$ to
-$\mathcal{O}(d^2)$ at each encoder level $l$, where $N_l$ is the number of
-spatial tokens and $d$ is the per-head embedding dimension. Because $N_l \gg d$
-for all four encoder levels when processing VHR patches at $256 \times 256$
-pixels and above, this asymptotic reduction is practically significant: it
-eliminates the $N_l \times N_l$ attention map from GPU memory during both the
-forward and backward passes, replacing it with the $d \times d$ rank-augmented
-key-value buffer $B$. The theoretical foundation of this substitution, developed
-in Section~\ref{sec:rala-theory}, establishes that rank collapse of the buffer---
-the principal failure mode of standard linear attention in dense prediction
-settings---is suppressed through two complementary mechanisms: the global query
-descriptor $Q_g$, which introduces token-relevance weighting that differentially
-amplifies informationally distinct outer products into the buffer accumulation,
-and the Hadamard output modulation, which injects local per-token information
-into the output feature representation and breaks the rank inequality that would
-otherwise collapse the output matrix rank to the minimum of $\mathrm{rank}(\kappa(Q))$
-and $\mathrm{rank}(B)$.
+The central architectural contribution is RALA-ChangeFormer: a hierarchical Siamese encoder-decoder for bi-temporal building change detection in which every Multi-Head Self-Attention block within the SegFormer-B2 encoder is replaced by a Rank-Augmented Linear Attention block \cite{Fan2025RALA}. The substitution maps the attention-related time complexity from $\mathcal{O}(N_l^2 d)$ to $\mathcal{O}(N_l d^2)$ and the memory complexity from $\mathcal{O}(N_l^2)$ to $\mathcal{O}(d^2)$ at each encoder level $l$, where $N_l$ is the number of spatial tokens and $d$ is the per-head embedding dimension. Because $N_l \gg d$ for all four encoder levels when processing \ac{VHR} patches at $256 \times 256$ pixels and above, this asymptotic reduction is practically significant: it eliminates the $N_l \times N_l$ attention map from \ac{GPU} memory during both the forward and backward passes, replacing it with the $d \times d$ rank-augmented key-value buffer $B$. The theoretical foundation of this substitution, developed in Section~\ref{sec:rala-theory}, establishes that rank collapse of the buffer, the principal failure mode of standard linear attention in dense prediction settings, is suppressed through two complementary mechanisms: the global query descriptor $Q_g$, which introduces token-relevance weighting that differentially amplifies informationally distinct outer products into the buffer accumulation, and the Hadamard output modulation, which injects local per-token information into the output feature representation and breaks the rank inequality that would otherwise collapse the output matrix rank to the minimum of $\mathrm{rank}(\kappa(Q))$ and $\mathrm{rank}(B)$.
 
-The primary empirical validation of this thesis is the demonstration of
-statistical accuracy parity between RALA-ChangeFormer and the full quadratic
-ChangeFormer \cite{Bandara2022ChangeFormer} across all six evaluated benchmarks.
-Across the complete evaluation matrix---encompassing LEVIR-CD, DSIFN-CD, WHU-CD,
-LEVIR-CD+, SYSU-CD, and S2Looking---the mean F1 advantage of RALA-ChangeFormer
-over ChangeFormer is $+0.14$ percentage points, a margin smaller than the
-run-to-run variance of a single training configuration and devoid of statistical
-significance. This result holds consistently across nadir-view and oblique-view
-acquisition geometries, binary and multi-class change annotation schemes, and
-spatial resolutions spanning two orders of magnitude from $0.3\,\mathrm{m}$ to
-$0.5\,\mathrm{m}$ per pixel. The accuracy parity is confirmed at both the summary
-metric level and the per-error-type qualitative level: the error map distributions
-of RALA-ChangeFormer exhibit the same morphological profiles as ChangeFormer on
-each dataset, without introducing any failure category specific to the
-rank-augmented attention mechanism.
+The primary empirical validation is the demonstration of near-parity in accuracy between \ac{RALA-CF} and the full quadratic ChangeFormer \cite{Bandara2022ChangeFormer} across all six evaluated benchmarks. Across the complete evaluation matrix, encompassing the six datasets, \ac{RALA-CF} trails ChangeFormer by a mean of only $0.94$ F1 percentage points, surpassing it on WHU-CD and remaining within one point on four of the remaining five datasets, a margin comparable to the run-to-run variance of a single training configuration. This result holds consistently across nadir-view and oblique-view acquisition geometries, binary and multi-class change annotation schemes, and spatial resolutions from $0.3\,\mathrm{m}$ to $0.5\,\mathrm{m}$ per pixel. The near-parity is confirmed at both the summary metric level and the per-error-type qualitative level: the error map distributions of RALA-ChangeFormer exhibit closely comparable morphological profiles to ChangeFormer on each dataset, without introducing any failure category specific to the rank-augmented attention mechanism.
 
-The computational efficiency gains are equally decisive. As established through
-controlled hardware profiling at three input patch resolutions, RALA-ChangeFormer
-delivers a \textbf{21.8\% reduction in peak GPU VRAM consumption} relative to
-ChangeFormer (10.38~GB versus 13.28~GB at $256 \times 256$, batch size 16) and
-an \textbf{8.0\% reduction in inference GFLOPs} (185.93 versus 202.17~GFLOPs
-per image pair). These reductions are accompanied by a \textbf{50\% expansion
-in the maximum feasible training batch size} before Out-Of-Memory failure, a
-ratio that is maintained uniformly across the tested resolution range from
-$256 \times 256$ to $1024 \times 1024$ pixels. In practical terms, ChangeFormer
-at standard operating resolution requires a minimum of 14~GB GPU VRAM and
-restricts training at the native $1024 \times 1024$ LEVIR-CD resolution to a
-batch size of 2; RALA-ChangeFormer operates within 12~GB GPU VRAM and expands
-the $1024 \times 1024$ batch limit to 3. These numbers translate directly into
-a lower hardware entry threshold for Transformer-based BCD research: institutions
-operating with consumer-grade GPUs in the 10--16~GB VRAM range---representative
-of the computing infrastructure available at the majority of academic Earth
-observation groups in Latin America, including those engaged in PeruSAT-1 urban
-monitoring---can now conduct full-resolution Siamese Transformer training within
-a single GPU budget that previously supported only convolutional or
-token-compressed architectures.
+The computational efficiency gains are equally substantial. As established through controlled hardware profiling at three input patch resolutions, RALA-ChangeFormer delivers a 22.2\% reduction in peak \ac{GPU} \ac{VRAM} consumption relative to ChangeFormer (21~GB versus 27~GB at $256 \times 256$, batch size 16) and an 8.1\% reduction in inference \ac{GFLOPs} (228.62 versus 248.77~\ac{GFLOPs} per image pair). These reductions are accompanied by a 50\% expansion in the maximum feasible training batch size before Out-Of-Memory failure, a ratio that is maintained uniformly across the tested resolution range from $256 \times 256$ to $1024 \times 1024$ pixels. In practical terms, at $256 \times 256$ with batch 16 the 27~GB peak \ac{VRAM} of ChangeFormer exceeds the capacity of a 24~GB \ac{GPU}, whereas the 21~GB of RALA-ChangeFormer fits within it, and RALA-ChangeFormer raises the maximum feasible batch size by 50\% at every tested resolution, from batch 2 to 3 at the native $1024 \times 1024$ resolution of LEVIR-CD. These reductions lower the hardware entry threshold for Transformer-based \ac{BCD} research, bringing full-attention-quality Siamese Transformer training within reach of the 24~GB consumer-grade GPUs representative of the computing infrastructure available at the majority of academic Earth observation groups in Latin America, including those engaged in PeruSAT-1 urban monitoring, which would otherwise depend on datacentre-class accelerators.
 
-Taken together, these findings confirm that rank-augmented linear attention
-constitutes a principled, non-heuristic pathway for democratizing access to
-state-of-the-art VHR building change detection. The efficiency gains are not
-obtained through approximations that degrade accuracy under distribution shift,
-compression schemes that reduce parameter capacity, or knowledge distillation
-from larger models: they are a direct algebraic consequence of replacing the
-dense $N \times N$ attention map with a $d \times d$ buffer whose rank is
-actively maintained against collapse through the learned weighting and modulation
-mechanisms of RALA. This structural clarity is the thesis's most enduring
-methodological contribution, as it provides a framework for systematic
-efficiency-accuracy analysis that is directly transferable to other hierarchical
-dense prediction architectures that share the quadratic attention bottleneck.
+Taken together, these findings confirm that rank-augmented linear attention constitutes a principled, non-heuristic pathway for broadening access to state-of-the-art \ac{VHR} building change detection. The efficiency gains are not obtained through approximations that degrade accuracy under distribution shift, compression schemes that reduce parameter capacity, or knowledge distillation from larger models: they are a direct algebraic consequence of replacing the dense $N \times N$ attention map with a $d \times d$ buffer whose rank is actively maintained against collapse through the learned weighting and modulation mechanisms of \ac{RALA}. This structural clarity is the thesis's most enduring methodological contribution, as it provides a framework for systematic efficiency-accuracy analysis that is directly transferable to other hierarchical dense prediction architectures that share the quadratic attention bottleneck.
 
 
 % =============================================================================
@@ -97,70 +22,16 @@ dense prediction architectures that share the quadratic attention bottleneck.
 \label{sec:conclusions-limitations}
 % =============================================================================
 
-The experimental program also identifies a set of structurally well-characterized
-limitations that delineate the operational boundaries of the RALA-ChangeFormer
-framework and motivate the future research directions articulated in
-Section~\ref{sec:conclusions-future}.
+The experimental program also identifies a set of structurally well-characterized limitations that delineate the operational boundaries of the RALA-ChangeFormer framework and motivate the future research directions articulated in Section~\ref{sec:conclusions-future}.
 
-The most severe performance boundary encountered in the six-dataset evaluation
-is the degradation on S2Looking, where both ChangeFormer and RALA-ChangeFormer
-achieve only 65.55\% and 65.91\% F1 respectively---a gap of approximately
-24--25 points relative to LEVIR-CD performance. The qualitative analysis of
-Section~\ref{sec:exp-dynamics} establishes that this degradation is not a
-consequence of the rank-augmented attention mechanism: the error maps of both
-architectures exhibit statistically identical parallax halo artifacts, concentrated
-at the perimeters of tall unchanged buildings where the apparent positional shift
-between acquisitions from slightly different orbital tracks is largest. This
-failure mode is architectural rather than attentional: it originates in the
-shared SegFormer-B2 convolutional encoder backbone, which extracts features from
-observed pixel intensity patterns without access to the satellite viewing angle
-metadata, off-nadir angle pairs, or stereophotogrammetric depth estimates that
-would be necessary to normalize out the apparent positional offsets induced by
-the oblique acquisition geometry. No modification to the attention mechanism
-alone---whether quadratic or linear, whether with or without rank augmentation---
-can resolve this geometric inconsistency, because the encoder's input tokens
-themselves are contaminated by parallax-induced apparent displacement before
-any attention computation occurs. The implication is clear: effective BCD on
-side-looking satellite imagery requires geometric pre-processing stages that
-are currently absent from all standard training pipelines, including that of
-this thesis.
+The most severe performance boundary encountered in the six-dataset evaluation is the degradation on S2Looking, where ChangeFormer and RALA-ChangeFormer achieve only 61.89\% and 60.39\% F1 respectively, a gap of approximately 28-29 points relative to LEVIR-CD performance. The qualitative analysis of Section~\ref{sec:exp-dynamics} establishes that this degradation is not a consequence of the rank-augmented attention mechanism: the error maps of both architectures exhibit statistically identical parallax halo artifacts, concentrated at the perimeters of tall unchanged buildings where the apparent positional shift between acquisitions from slightly different orbital tracks is largest. This failure mode is architectural rather than attentional: it originates in the shared SegFormer-B2 convolutional encoder backbone, which extracts features from observed pixel intensity patterns without access to the satellite viewing angle metadata, off-nadir angle pairs, or stereophotogrammetric depth estimates that would be necessary to normalize out the apparent positional offsets induced by the oblique acquisition geometry. No modification to the attention mechanism alone, whether quadratic or linear, with or without rank augmentation, can resolve this geometric inconsistency, because the encoder's input tokens themselves are contaminated by parallax-induced apparent displacement before any attention computation occurs. The implication is clear: effective \ac{BCD} on side-looking satellite imagery requires geometric pre-processing stages that are currently absent from all standard training pipelines, including that of this thesis.
 
-A second category of limitation is exposed by the SYSU-CD results. The dataset's
-multi-class annotation scheme assigns positive change labels to road alterations,
-vegetation removal, sea reclamation, and building construction simultaneously,
-while the model is trained under a binary BCE-Dice loss that was calibrated on
-the building-construction-dominated training distribution of LEVIR-CD. The result
-is a systematic false alarm elevation in regions containing semantically valid
-but non-building change events---visible as dense red patches in the SYSU-CD
-error maps---that neither ChangeFormer nor RALA-ChangeFormer can suppress without
-loss of recall on the building class. This limitation is not specific to RALA;
-it reflects the fundamental mismatch between a building-centric training objective
-and a multi-class evaluation target. Resolving it requires either multi-class
-loss supervision during training, domain adaptation from the binary to the
-multi-class setting, or dataset-specific fine-tuning that explicitly targets the
-SYSU-CD annotation taxonomy. In all these cases, the limitation is a property
-of the learning objective design rather than of the attention architecture.
+A second category of limitation is exposed by the SYSU-CD results. The dataset's multi-class annotation scheme assigns positive change labels to road alterations, vegetation removal, sea reclamation, and building construction simultaneously, while the model is trained under a binary BCE-Dice loss that was calibrated on the building-construction-dominated training distribution of LEVIR-CD. The result is a systematic false alarm elevation in regions containing semantically valid but non-building change events, visible as dense red patches in the SYSU-CD error maps, that neither ChangeFormer nor RALA-ChangeFormer can suppress without loss of recall on the building class. This limitation is not specific to \ac{RALA}; it reflects the fundamental mismatch between a building-centric training objective and a multi-class evaluation target. Resolving it requires either multi-class loss supervision during training, domain adaptation from the binary to the multi-class setting, or dataset-specific fine-tuning that explicitly targets the SYSU-CD annotation taxonomy. In all these cases, the limitation is a property of the learning objective design rather than of the attention architecture.
 
 
-A third category of limitation relates to the encoding capacity of the shared backbone, which integrates convolutional and Transformer layers. As documented in the parameter and FLOPs analysis of Table~\ref{tab:efficiency}, both ChangeFormer and RALA-ChangeFormer operate at 41~M parameters, a fixed capacity determined by the SegFormer-B2 backbone design. This capacity ceiling bounds the upper F1 that either model can achieve across all six datasets, and the performance gradient observed between the two architectures---ranging from $+0.13$ F1 points on LEVIR-CD to $+0.36$ on S2Looking---reflects the degree to which the rank augmentation provides an attention-level representational advantage over the uniform linear baseline within the shared backbone capacity. When the backbone itself is the
-binding constraint---as on S2Looking, where the geometric normalization of the
-input data is the operative limitation---further improvements to the attention
-mechanism can yield only marginal gains. This observation implies that
-architectural advances in efficient BCD must target both the attention
-computation and the encoder input pipeline simultaneously to unlock the next
-tier of accuracy improvements on geometrically challenging benchmarks.
+A third category of limitation relates to the encoding capacity of the shared backbone, which integrates convolutional and Transformer layers. As documented in the parameter and \ac{FLOPs} analysis of Table~\ref{tab:efficiency}, both ChangeFormer and RALA-ChangeFormer operate at comparable parameter counts (247~M and 243~M respectively, Table~\ref{tab:efficiency}), a near-fixed capacity determined by the SegFormer-B2 backbone design. This capacity ceiling bounds the upper F1 that either model can achieve across all six datasets, and the small differences observed between the two architectures, ranging from $+0.40$ F1 points on WHU-CD to $-2.60$ on DSIFN-CD, indicate that within the shared backbone capacity the rank-augmented linear attention is largely representationally equivalent to full quadratic attention, with the residual gap governed by how much token diversity the compressed buffer must discard on each dataset. When the backbone itself is the binding constraint, as on S2Looking, where the geometric normalization of the input data is the operative limitation, further improvements to the attention mechanism can yield only marginal gains. This observation implies that architectural advances in efficient \ac{BCD} must target both the attention computation and the encoder input pipeline simultaneously to unlock the next tier of accuracy improvements on geometrically challenging benchmarks.
 
-Finally, the practical memory and compute floor of RALA-ChangeFormer, while
-substantially lower than that of its quadratic counterpart, remains non-trivial
-in absolute terms. At $1024 \times 1024$ native resolution, the maximum feasible
-batch size of 3 continues to produce noisy gradient estimates that constrain
-convergence speed relative to the batch sizes achievable at $256 \times 256$.
-For institutions with access to only 8~GB GPU VRAM---still a common constraint
-in the Global South---the architecture remains out of reach for full-resolution
-training even with RALA, and patch-based training with reduced resolution must
-be used. These constraints reinforce the argument that additional algorithmic
-efficiency innovations, beyond the attention mechanism substitution alone, are
-needed to make end-to-end full-resolution VHR BCD universally accessible.
+Finally, the practical memory and compute floor of RALA-ChangeFormer, while substantially lower than that of its quadratic counterpart, remains non-trivial in absolute terms. At $1024 \times 1024$ native resolution, the maximum feasible batch size of 3 continues to produce noisy gradient estimates that constrain convergence speed relative to the batch sizes achievable at $256 \times 256$. For institutions with access to only 8~GB \ac{GPU} \ac{VRAM}, still a common constraint in the Global South, the architecture remains out of reach for full-resolution training even with \ac{RALA}, and patch-based training with reduced resolution must be used. These constraints reinforce the argument that additional algorithmic efficiency innovations, beyond the attention mechanism substitution alone, are needed to make end-to-end full-resolution \ac{VHR} \ac{BCD} universally accessible.
 
 
 % =============================================================================
@@ -168,129 +39,23 @@ needed to make end-to-end full-resolution VHR BCD universally accessible.
 \label{sec:conclusions-future}
 % =============================================================================
 
-The limitations documented in Section~\ref{sec:conclusions-limitations} point
-to a coherent research roadmap organized around two complementary pillars: the
-technical extension of the efficient attention framework through adaptive and
-geometry-aware mechanisms, and the geographic and morphological expansion of the
-evaluation and deployment context toward the informal urban environments that
-characterize Latin American metropolitan areas.
+The limitations documented in Section~\ref{sec:conclusions-limitations} point to a coherent research roadmap organized around two complementary pillars: the technical extension of the efficient attention framework through adaptive and geometry-aware mechanisms, and the geographic and morphological expansion of the evaluation and deployment context toward the informal urban environments that characterize Latin American metropolitan areas.
 
 \subsection*{Technical Extensions: Adaptive Rank Control and Geometric Alignment}
 
-The most immediate technical limitation of RALA is that the rank augmentation
-strength---governed by the global query descriptor $Q_g$ and the token relevance
-weights $\alpha_j$---is a fixed learned function of the input data, without any
-explicit mechanism for adapting the effective rank of the key-value buffer $B$
-to the local information content of the scene. In spectral environments with
-high token diversity, such as informal urban areas with heterogeneous rooftop
-materials and irregular spatial configurations, the current buffer may still
-experience partial rank loss when the query distribution is insufficiently
-diverse. A principled response to this is the integration of an online
-lightweight singular value decomposition (SVD) tracking procedure into the
-attention block: by monitoring the singular value spectrum of $B$ across training
-iterations, the model can dynamically identify when the effective rank of the
-buffer is falling below a target threshold and modulate the attention mixing
-parameters accordingly. This data-dependent rank adaptation heuristic would
-extend RALA's representational robustness to scenes that differ systematically
-from the token diversity profiles encountered in the standard benchmark training
-distributions, without requiring any increase in the $\mathcal{O}(N d^2)$
-asymptotic complexity of the attention computation.
+The most immediate technical limitation of \ac{RALA} is that the rank augmentation strength governed by the global query descriptor $Q_g$ and the token relevance weights $\alpha_j$ is a fixed learned function of the input data, without any explicit mechanism for adapting the effective rank of the key-value buffer $B$ to the local information content of the scene. In spectral environments with high token diversity, such as informal urban areas with heterogeneous rooftop materials and irregular spatial configurations, the current buffer may still experience partial rank loss when the query distribution is insufficiently diverse. A principled response to this is the integration of an online lightweight \ac{SVD} tracking procedure into the attention block: by monitoring the singular value spectrum of $B$ across training iterations, the model can dynamically identify when the effective rank of the buffer is falling below a target threshold and modulate the attention mixing parameters accordingly. This data-dependent rank adaptation heuristic would extend \ac{RALA}'s representational robustness to scenes that differ systematically from the token diversity profiles encountered in the standard benchmark training distributions, without requiring any increase in the $\mathcal{O}(N d^2)$ asymptotic complexity of the attention computation.
 
-The S2Looking results motivate a distinct line of extension: the design of
-upstream geometric perspective pre-alignment modules that normalize the apparent
-positional offsets induced by oblique satellite acquisition before the encoder
-processes the bi-temporal image pair. A promising direction is the integration
-of a lightweight stereophotogrammetric depth estimation head---trained on
-auxiliary digital surface model data available from global topographic archives
-such as SRTM or Copernicus DEM---that estimates per-building height maps from
-single-date VHR imagery and uses them to predict and correct the expected
-parallax displacement for a given off-nadir viewing angle pair. This geometric
-normalization stage would be inserted between the preprocessing pipeline and the
-patch embedding module, operating on the raw image pair before tokenization and
-producing geometrically corrected bi-temporal patches that are free of the
-apparent positional offsets that currently confound the encoder's feature
-comparison. Such a pre-alignment module is architecture-agnostic---it would
-benefit both quadratic and linear attention variants equally---but its
-development is motivated specifically by the parallax degradation documented
-for the side-looking benchmark in this thesis.
+The S2Looking results motivate a distinct line of extension: the design of upstream geometric perspective pre-alignment modules that normalize the apparent positional offsets induced by oblique satellite acquisition before the encoder processes the bi-temporal image pair. A promising direction is the integration of a lightweight stereophotogrammetric depth estimation head trained on auxiliary digital surface model data available from global topographic archives (such as SRTM or Copernicus DEM) that estimates per-building height maps from single-date \ac{VHR} imagery and uses them to predict and correct the expected parallax displacement for a given off-nadir viewing angle pair. This geometric normalization stage would be inserted between the preprocessing pipeline and the patch embedding module, operating on the raw image pair before tokenization and producing geometrically corrected bi-temporal patches that are free of the apparent positional offsets that currently confound the encoder's feature comparison. Such a pre-alignment module is architecture-agnostic, benefiting both quadratic and linear attention variants equally, but its development is motivated specifically by the parallax degradation documented for the side-looking benchmark in this thesis.
 
-A further technical direction concerns the extension of RALA to multi-temporal
-sequences beyond the bi-temporal pair format. The current formulation processes
-two acquisitions through a weight-sharing Siamese encoder and computes pairwise
-feature differences at each scale, a design that is sufficient for detecting
-change between two epochs but cannot represent the temporal trajectory of change
-events across three or more acquisitions. Adapting the global query descriptor
-to aggregate information across multiple temporal tokens---rather than the two
-temporal branches of the current Siamese design---would enable RALA-ChangeFormer
-to model progressive construction sequences, detect demolition followed by
-reconstruction, and assess seasonal temporal stability of detected changes within
-a unified architectural framework. This extension would require a more general
-formulation of the $\alpha_j$ weighting mechanism to account for the asymmetric
-temporal relationships between an arbitrary number of acquisitions, and its
-memory footprint would remain $\mathcal{O}(N d^2)$ per attention block provided
-that the buffer accumulation is performed independently across temporal channels.
+A further technical direction concerns the extension of \ac{RALA} to multi-temporal sequences beyond the bi-temporal pair format. The current formulation processes two acquisitions through a weight-sharing Siamese encoder and computes pairwise feature differences at each scale, a design that is sufficient for detecting change between two epochs but cannot represent the temporal trajectory of change events across three or more acquisitions. Adapting the global query descriptor to aggregate information across multiple temporal tokens rather than the two temporal branches of the current Siamese design would enable RALA-ChangeFormer to model progressive construction sequences, detect demolition followed by reconstruction, and assess seasonal temporal stability of detected changes within a unified architectural framework. This extension would require a more general formulation of the $\alpha_j$ weighting mechanism to account for the asymmetric temporal relationships between an arbitrary number of acquisitions, and its memory footprint would remain $\mathcal{O}(N d^2)$ per attention block provided that the buffer accumulation is performed independently across temporal channels.
 
 \subsection*{Geographic and Morphological Expansion: Benchmarks for the
 Global South}
 
-Beyond technical extensions of the RALA mechanism itself, this thesis identifies
-a deeper structural challenge in the BCD literature: the systematic absence of
-evaluation benchmarks representative of the informal urban growth patterns,
-mixed-use land parcel structures, and irregular building topologies that
-characterize the metropolitan areas of Latin America, Sub-Saharan Africa, and
-South and Southeast Asia---regions that are simultaneously among the most
-rapidly urbanizing on Earth and the most underserved by operational BCD systems. The six benchmark datasets used in this thesis share a common acquisition profile
-that reflects the research priorities of communities with access to large-scale
-VHR archives and annotation capacity: near-nadir viewing geometry, binary or
-categorically simple change labels, predominantly planned or semi-planned urban
-morphologies in East Asian cities, and spatial resolutions calibrated for
-commercial satellite imagery. Lima, Metropolitan Lima---with its simultaneous
-horizontal periphery expansion into desert hillsides and vertical densification
-of its consolidated residential districts---represents a qualitatively different
-change detection challenge from those captured by LEVIR-CD or WHU-CD. Peripheral
-hillside settlements in districts such as Villa María del Triunfo or San Juan de
-Miraflores grow through irregular plot subdivision, incremental self-construction
-across multiple temporal epochs, and building typologies that differ
-fundamentally from the rectangular footprint, flat roof, and homogeneous material
-signature that characterizes the dominant positive class in existing benchmarks.
-These structural differences mean that models trained exclusively on existing
-international benchmarks may exhibit systematic failure modes when applied to
-Peruvian urban monitoring contexts that are not captured by any available
-evaluation protocol.
+Beyond technical extensions of the \ac{RALA} mechanism itself, this thesis identifies a deeper structural challenge in the \ac{BCD} literature: the systematic absence of evaluation benchmarks representative of the informal urban growth patterns, mixed-use land parcel structures, and irregular building topologies that characterize the metropolitan areas of Latin America, Sub-Saharan Africa, and South and Southeast Asia, regions that are simultaneously among the most rapidly urbanizing on Earth and the most underserved by operational \ac{BCD} systems. The six benchmark datasets used in this thesis share a common acquisition profile that reflects the research priorities of communities with access to large-scale \ac{VHR} archives and annotation capacity: near-nadir viewing geometry, binary or categorically simple change labels, predominantly planned or semi-planned urban morphologies in East Asian cities, and spatial resolutions calibrated for commercial satellite imagery. Metropolitan Lima, with its simultaneous horizontal periphery expansion into desert hillsides and vertical densification of its consolidated residential districts, represents a qualitatively different change detection challenge from those captured by LEVIR-CD or WHU-CD. Peripheral hillside settlements in districts such as Villa María del Triunfo or San Juan de Miraflores grow through irregular plot subdivision, incremental self-construction across multiple temporal epochs, and building typologies that differ fundamentally from the rectangular footprint, flat roof, and homogeneous material signature that characterizes the dominant positive class in existing benchmarks. These structural differences mean that models trained exclusively on existing international benchmarks may exhibit systematic failure modes when applied to Peruvian urban monitoring contexts that are not captured by any available evaluation protocol.
 
-Addressing this gap requires the creation of a dedicated bi-temporal VHR building
-change detection benchmark for Peruvian and, more broadly, Latin American urban
-environments, constructed from PeruSAT-1 imagery supplemented by high-resolution
-commercial acquisitions over Lima, São Paulo, Bogotá, and other large metropolitan
-areas with active informal growth. The benchmark design must engage directly with
-the annotation challenges that are specific to this context: the distinction
-between informal incremental construction---where a roof extension added above a
-ground-floor dwelling constitutes a structurally significant change that would
-not be labeled as change in a binary footprint-change dataset---and the permanent
-replacement of one structure by another; the co-occurrence of formal and informal
-construction within a single image patch, requiring a nuanced annotation ontology
-that existing binary labeling conventions cannot represent; and the calibration
-of evaluation metrics to reflect the planning and governance priorities of the
-institutions that would consume such a system's outputs, which differ
-substantially from the precision-recall trade-offs that drive optimization on
-academic benchmarks. The GINIA urban data analysis subgroup at UTEC is uniquely
-positioned to lead this initiative, combining access to PeruSAT-1 imagery,
-domain expertise in Peruvian urban dynamics, and the methodological foundation
-developed in this thesis.
+Addressing this gap requires the creation of a dedicated bi-temporal \ac{VHR} building change detection benchmark for Peruvian and, more broadly, Latin American urban environments, constructed from PeruSAT-1 imagery supplemented by high-resolution commercial acquisitions over Lima, São Paulo, Bogotá, and other large metropolitan areas with active informal growth. The benchmark design must engage directly with the annotation challenges that are specific to this context: the distinction between informal incremental construction (where a roof extension added above a ground-floor dwelling constitutes a structurally significant change that would not be labeled as change in a binary footprint-change dataset) and the permanent replacement of one structure by another; the co-occurrence of formal and informal construction within a single image patch, requiring a nuanced annotation ontology that existing binary labeling conventions cannot represent; and the calibration of evaluation metrics to reflect the planning and governance priorities of the institutions that would consume such a system's outputs, which differ substantially from the precision-recall trade-offs that drive optimization on academic benchmarks. The GINIA urban data analysis subgroup at UTEC is uniquely positioned to lead this initiative, combining access to PeruSAT-1 imagery, domain expertise in Peruvian urban dynamics, and the methodological foundation developed in this thesis.
 
-At the operational deployment level, future work must address the integration
-of RALA-ChangeFormer into a complete urban monitoring workflow: geometric and
-radiometric preprocessing of PeruSAT-1 imagery at continental scale, inference
-at the level of entire city districts rather than $256 \times 256$ patches,
-mosaicking of patch-level predictions into spatially consistent city-wide change
-maps, and the generation of cartographic products suitable for consumption by
-public institutions engaged in land use planning, informal settlement monitoring,
-and seismic vulnerability assessment. Model compression techniques---including
-quantization-aware training, structured pruning, and knowledge distillation into
-compact convolutional student models---would further reduce the inference memory
-footprint to levels compatible with cloud-native or edge deployment architectures,
-extending the operational reach of the RALA-ChangeFormer framework to
-environments where neither A100 GPU clusters nor constant connectivity can be
-assumed.
+At the operational deployment level, future work must address the integration of RALA-ChangeFormer into a complete urban monitoring workflow: geometric and radiometric preprocessing of PeruSAT-1 imagery at continental scale, inference at the level of entire city districts rather than $256 \times 256$ patches, mosaicking of patch-level predictions into spatially consistent city-wide change maps, and the generation of cartographic products suitable for consumption by public institutions engaged in land use planning, informal settlement monitoring, and seismic vulnerability assessment. Model compression techniques including quantization-aware training, structured pruning, and knowledge distillation into compact convolutional student models would further reduce the inference memory footprint to levels compatible with cloud-native or edge deployment architectures, extending the operational reach of the RALA-ChangeFormer framework to environments where neither A100 \ac{GPU} clusters nor constant connectivity can be assumed.
 
 The convergence of these technical and geographic research directions points toward a research programme of sustained ambition: the construction of computationally accessible, geographically representative, and operationally deployable deep learning systems for bi-temporal urban change monitoring across the full morphological diversity of the Global South. This thesis establishes the efficient attention mechanism foundations on which such a programme can be built.

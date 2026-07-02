@@ -1,18 +1,7 @@
 \chapter{Related Work}
 \label{chap:related_work}
 
-The development of RALA-ChangeFormer sits at the intersection of three
-sustained research trajectories: the long evolution of automated building
-change detection from classical image analysis to deep neural architectures,
-the more recent paradigm shift toward Transformer-based bi-temporal reasoning
-in Earth observation, and the parallel effort to reduce the computational cost
-of self-attention without sacrificing the representational fidelity that dense
-prediction tasks demand. The present chapter traces these trajectories in
-sequence, drawing out the specific limitations of each prior generation of
-methods that motivate the next, and culminating in a precise characterization
-of the evaluation gap---across acquisition geometries, spatial resolutions,
-and scene complexities---that the experimental program of this thesis is
-designed to close.
+The development of RALA-ChangeFormer sits at the intersection of three sustained research trajectories: the long evolution of automated building change detection from classical image analysis to deep neural architectures, the more recent paradigm shift toward Transformer-based bi-temporal reasoning in Earth observation, and the parallel effort to reduce the computational cost of self-attention without sacrificing the representational fidelity that dense prediction tasks demand. The present chapter traces these trajectories in sequence, drawing out the specific limitations of each prior generation of methods that motivate the next, and culminating in a precise characterization of the evaluation gap across acquisition geometries, spatial resolutions, and scene complexities that the experimental program of this thesis is designed to close.
 
 
 % =============================================================================
@@ -20,107 +9,20 @@ designed to close.
 \label{sec:supervised-bcd}
 % =============================================================================
 
-The intellectual origins of automated change detection predate the deep
-learning era by several decades. Classical approaches operated directly on
-pixel intensity values, As surveyed by \cite{Hussain2013Review}, classical approaches produced change
-indicators through image differencing, image rationing, or post-classification
-comparison of independently labelled single-date images. Image differencing---subtracting
-the pixel values of a reference image from those of a query image and
-thresholding the residual---is computationally trivial but sensitive to any
-radiometric inconsistency between acquisitions, including differences in solar
-zenith angle, atmospheric aerosol loading, and sensor calibration drift. Since
-none of these sources of variation are semantically meaningful, classical
-difference maps contain a large proportion of false alarms that cannot be
-suppressed without laborious manual thresholding. Post-classification
-comparison partially mitigates this problem by applying independent land-cover
-classifiers to each date before comparing the resulting label maps; however,
-classification errors in either single-date map propagate into the change
-product, and the approach requires two separately trained classifiers whose
-label ontologies must be exactly harmonized.
+The intellectual origins of automated change detection predate the deep learning era by several decades. Classical approaches operated directly on pixel intensity values \cite{Hussain2013Review}, producing change indicators through image differencing, image rationing, or post-classification comparison of independently labelled single-date images. Image differencing, which subtracts the pixel values of a reference image from those of a query image and thresholds the residual, is computationally trivial but sensitive to any radiometric inconsistency between acquisitions, including differences in solar zenith angle, atmospheric aerosol loading, and sensor calibration drift. Since none of these sources of variation are semantically meaningful, classical difference maps contain a large proportion of false alarms that cannot be suppressed without laborious manual thresholding. Post-classification comparison partially mitigates this problem by applying independent land-cover classifiers to each date before comparing the resulting label maps; however, classification errors in either single-date map propagate into the change product, and the approach requires two separately trained classifiers whose label ontologies must be exactly harmonized.
 
-The introduction of convolutional neural networks for dense prediction tasks
-in remote sensing opened a substantially more powerful pathway by enabling
-end-to-end learning of change-discriminative features directly from raw image
-pairs \cite{Shafique2022Review}. The foundational architecture in this context
-is the fully convolutional Siamese network, in which two branches with shared
-weights process the two temporal acquisitions independently, and a comparison
-module---applied to the resulting feature maps---produces the dense change
-prediction. \cite{Daudt2018SiamICIP} established the canonical design space
-for this family by proposing three variants: FC-EF, which concatenates the
-input images channel-wise and feeds the joint tensor into a single encoder;
-FC-Siam-Diff, which encodes the two images through a shared branch and
-computes the element-wise difference of corresponding feature maps; and
-FC-Siam-Conc, which concatenates those feature maps channel-wise before the
-decoder. The weight-sharing constraint in FC-Siam-Diff and FC-Siam-Conc is
-crucial: because both branches apply identical linear transformations to their
-respective inputs, the resulting feature representations are guaranteed to
-occupy the same metric space, making the difference or concatenation
-semantically coherent as a change signal. FC-EF, by contrast, presents the
-model with a joint input and relies on the encoder to learn the temporal
-comparison implicitly, which sacrifices this geometric guarantee but enables
-richer early-fusion interactions between the two temporal fields.
+The introduction of convolutional neural networks for dense prediction tasks in remote sensing opened a substantially more powerful pathway by enabling end-to-end learning of change-discriminative features directly from raw image pairs \cite{Shafique2022Review}. The foundational architecture in this context is the fully convolutional Siamese network, in which two branches with shared weights process the two temporal acquisitions independently, and a comparison module applied to the resulting feature maps produces the dense change prediction. The canonical design space for this family was established in \cite{Daudt2018SiamICIP} through three variants: FC-EF, which concatenates the input images channel-wise and feeds the joint tensor into a single encoder; FC-Siam-Diff, which encodes the two images through a shared branch and computes the element-wise difference of corresponding feature maps; and FC-Siam-Conc, which concatenates those feature maps channel-wise before the decoder. The weight-sharing constraint in FC-Siam-Diff and FC-Siam-Conc is crucial: because both branches apply identical linear transformations to their respective inputs, the resulting feature representations are guaranteed to occupy the same metric space, making the difference or concatenation semantically coherent as a change signal. FC-EF, by contrast, presents the model with a joint input and relies on the encoder to learn the temporal comparison implicitly, which sacrifices this geometric guarantee but enables richer early-fusion interactions between the two temporal fields.
 
-Beyond the architecture of the backbone, a pervasive challenge in convolutional
-BCD is the management of spatial detail across the encoder hierarchy. Standard
-encoder-decoder networks with pooling operations progressively compress spatial
-resolution, and while this compression enables the model to build high-level
-semantic representations, it tends to discard the fine edge information that
-is essential for precise building boundary delineation. SNUNet-CD
-\cite{Fang2021SNUNetCD} addressed this problem by introducing a dense skip
-connection strategy adapted from the NestedUNet architecture. Rather than
-connecting each encoder level to only the spatially corresponding decoder
-level, SNUNet-CD employs a complete connection graph in which every decoder
-node receives features from all encoder nodes at the same or higher spatial
-resolution, maintaining a continuous flow of fine-grained spatial detail
-throughout the decoding process. This architectural choice proved particularly
-effective for detecting small, isolated building additions that would otherwise
-be lost in the compressed encoder representation.
+Beyond the architecture of the backbone, a pervasive challenge in convolutional \ac{BCD} is the management of spatial detail across the encoder hierarchy. Standard encoder-decoder networks with pooling operations progressively compress spatial resolution, and while this compression enables the model to build high-level semantic representations, it tends to discard the fine edge information that is essential for precise building boundary delineation. SNUNet-CD \cite{Fang2021SNUNetCD} addressed this problem by introducing a dense skip connection strategy adapted from the NestedUNet architecture. Rather than connecting each encoder level to only the spatially corresponding decoder level, SNUNet-CD employs a complete connection graph in which every decoder node receives features from all encoder nodes at the same or higher spatial resolution, maintaining a continuous flow of fine-grained spatial detail throughout the decoding process. This architectural choice proved particularly effective for detecting small, isolated building additions that would otherwise be lost in the compressed encoder representation.
 
-A complementary line of work focused on the design of the comparison module
-itself. Deep supervision was identified as a powerful training signal for
-enforcing that semantically meaningful change information is present at every
-level of the feature hierarchy, not only at the decoder output. DSIFN-CD
-\cite{Zhang2020FusionNetDSIFN} applied this strategy within a fusion network
-designed for the heterogeneous imaging conditions of the DSIFN-CD benchmark,
-where multi-class land-cover changes at varying spatial scales require the
-model to simultaneously integrate coarse semantic context and fine texture
-detail. Channel attention mechanisms applied to the concatenated bi-temporal
-feature maps at each scale selectively amplify the channels most informative
-for change discrimination while suppressing channels dominated by consistent
-background structure. Subsequent architectures, including
-FCCDN \cite{PChen2022FCCDN} and HFA-Net \cite{Zheng2022HFANet}, refined this
-approach by incorporating high-frequency spectral components into the attention
-weighting mechanism, reasoning that genuine structural changes---newly
-constructed concrete surfaces, exposed roofing materials, bare excavation
-ground---tend to produce sharper high-frequency boundaries than the temporally
-consistent gradients of vegetation and paved surfaces.
+A complementary line of work focused on the design of the comparison module itself. Deep supervision was identified as a powerful training signal for enforcing that semantically meaningful change information is present at every level of the feature hierarchy, not only at the decoder output. DSIFN-CD \cite{Zhang2020FusionNetDSIFN} applied this strategy within a fusion network designed for the heterogeneous imaging conditions of the DSIFN-CD benchmark, where multi-class land-cover changes at varying spatial scales require the model to simultaneously integrate coarse semantic context and fine texture detail. Channel attention mechanisms applied to the concatenated bi-temporal feature maps at each scale selectively amplify the channels most informative for change discrimination while suppressing channels dominated by consistent background structure. Subsequent architectures, including FCCDN \cite{PChen2022FCCDN} and HFA-Net \cite{Zheng2022HFANet}, refined this approach by incorporating high-frequency spectral components into the attention weighting mechanism, reasoning that genuine structural changes, such as newly constructed concrete surfaces, exposed roofing materials, or bare excavation ground, tend to produce sharper high-frequency boundaries than the temporally consistent gradients of vegetation and paved surfaces.
 
-Despite this progression, the convolutional paradigm carries a fundamental
-representational limitation that no amount of architectural refinement can
-fully overcome: the receptive field of any convolutional layer is bounded by
-the product of its kernel size and the number of preceding downsampling
-operations. In VHR imagery, where a single patch of 256$\times$256 pixels can
-contain dozens of individual buildings embedded in a complex urban fabric of
-roads, vegetation, and shadow, the ability to reason about the spatial
-relationship between a newly constructed building and distant contextual
-structures---a neighboring construction site, a road intersection, a
-previously demolished building---requires integrating information across
-spatial extents that exceed the effective receptive field of any practically
-feasible convolutional architecture. This global context dependency is not a
-secondary consideration: urban growth in cities like Lima is characterized by
-construction clusters, where the appearance of new buildings in one location
-predicts heightened probability of change in geometrically distant but
-functionally related areas. Convolutional models, constrained to local
-interactions, cannot represent these non-local spatial dependencies and
-therefore produce change maps that are locally accurate but globally
-incoherent.
+Despite this progression, the convolutional paradigm carries a fundamental representational limitation that no amount of architectural refinement can fully overcome: the receptive field of any convolutional layer is bounded by the product of its kernel size and the number of preceding downsampling operations. In \ac{VHR} imagery, where a single patch of 256$\times$256 pixels can contain dozens of individual buildings embedded in a complex urban fabric of roads, vegetation, and shadow, the ability to reason about the spatial relationship between a newly constructed building and distant contextual structures, such as a neighboring construction site, a road intersection, or a previously demolished building, requires integrating information across spatial extents that exceed the effective receptive field of any practically feasible convolutional architecture. This global context dependency is not a secondary consideration: urban growth in cities like Lima is characterized by construction clusters, where the appearance of new buildings in one location predicts heightened probability of change in geometrically distant but functionally related areas. Convolutional models, constrained to local interactions, cannot represent these non-local spatial dependencies and therefore produce change maps that are locally accurate but globally incoherent. Figure~\ref{fig:supervised} situates these supervised convolutional approaches within the broader taxonomy of building change detection methods that culminates in Transformer-based architectures.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.70\textwidth]{graficos/supervised.png}
-    \caption{Conceptual taxonomy of supervised building change detection
-    approaches, from early pixel-based methods to convolutional Siamese
-    networks and, subsequently, Transformer-based architectures.}
+\caption{Conceptual taxonomy of supervised building change detection approaches, from early pixel-based methods to convolutional Siamese networks and, subsequently, Transformer-based architectures.}
     \label{fig:supervised}
 \end{figure}
 
@@ -130,107 +32,22 @@ incoherent.
 \label{sec:enablers-transformers}
 % =============================================================================
 
-The introduction of self-attention---formalized by \cite{Vaswani2017Attention}
-as the primary computation unit in sequence modelling---and its subsequent
-adaptation to computer vision \cite{Dosovitskiy2021ViT} provided remote
-sensing researchers
-with a principled mechanism for modeling non-local spatial dependencies that
-convolutional architectures cannot capture. In the Transformer framework,
-every token in the input sequence explicitly attends to every other token via
-pairwise dot-product interactions, constructing a dense attention map that
-encodes the full relational structure of the spatial context. This global
-receptive field is available at every layer of the encoder, without requiring
-the progressive expansion of convolutional stacks, and it does not depend on
-any spatial locality assumption. For building change detection, where genuine
-construction events must be discriminated from radiometric artifacts
-distributed across the entire image, this representational universality is a
-qualitative rather than merely quantitative advance.
+The introduction of self-attention \cite{Vaswani2017Attention} as the primary computation unit in sequence modelling, and its subsequent  \cite{Dosovitskiy2021ViT}, provided remote sensing researchers with a principled mechanism for modeling non-local spatial dependencies that convolutional architectures cannot capture. In the Transformer framework, every token in the input sequence explicitly attends to every other token via pairwise dot-product interactions, constructing a dense attention map that encodes the full relational structure of the spatial context. This global receptive field is available at every layer of the encoder, without requiring the progressive expansion of convolutional stacks, and it does not depend on any spatial locality assumption. For building change detection, where genuine construction events must be discriminated from radiometric artifacts distributed across the entire image, this representational universality is a qualitative rather than merely quantitative advance.
 
-The first significant application of Transformer-based reasoning to BCD was
-the Binary change detection with Image Transformers (BIT) architecture
-\cite{Chen2022BIT}. BIT processes the bi-temporal feature maps produced by a
-convolutional backbone through a compact semantic token set---a small number
-of prototype vectors that summarize the high-level content of each
-acquisition---and applies cross-temporal attention between these tokens to
-model the relational structure of the temporal change. The cross-temporal
-interaction mechanism of BIT is conceptually powerful: by attending from query
-tokens derived from $I_{t_2}$ to key-value pairs derived from $I_{t_1}$,
-the architecture explicitly models the asymmetric relationship between a
-reference state and an updated state, rather than treating both acquisitions
-symmetrically. This directional design proved effective on the LEVIR-CD and
-WHU-CD benchmarks \cite{Ji2019WHU}, and BIT's lightweight token compression
-reduced the sequence length processed by the Transformer to a manageable
-constant, sidestepping the quadratic scaling of full self-attention at the
-cost of limiting the resolution of the modeled spatial relationships to the
-granularity of the learned prototypes.
+The first significant application of Transformer-based reasoning to \ac{BCD} was the Binary change detection with Image Transformers (BIT) architecture \cite{Chen2022BIT}. BIT processes the bi-temporal feature maps produced by a convolutional backbone through a compact semantic token set, a small number of prototype vectors that summarize the high-level content of each acquisition, and applies cross-temporal attention between these tokens to model the relational structure of the temporal change. The cross-temporal interaction mechanism of BIT is conceptually powerful: by attending from query tokens derived from $I_{t_2}$ to key-value pairs derived from $I_{t_1}$, the architecture explicitly models the asymmetric relationship between a reference state and an updated state, rather than treating both acquisitions symmetrically. This directional design proved effective on the LEVIR-CD and WHU-CD benchmarks \cite{Ji2019WHU}, and BIT's lightweight token compression reduced the sequence length processed by the Transformer to a manageable constant, sidestepping the quadratic scaling of full self-attention at the cost of limiting the resolution of the modeled spatial relationships to the granularity of the learned prototypes.
 
-ChangeFormer \cite{Bandara2022ChangeFormer} constituted a more principled and
-architecturally complete adoption of hierarchical Vision Transformers for BCD.
-Rather than limiting Transformer processing to a compressed token
-representation, ChangeFormer applied full multi-head self-attention at each
-level of a hierarchical Siamese encoder whose design follows the SegFormer-B2
-backbone. The bi-temporal inputs are processed through shared patch embedding
-modules at four resolution levels, and the resulting token sequences of length
-$N_l = H_l \times W_l$ at level $l$ are jointly processed by MHSA blocks
-that model temporal and spatial dependencies simultaneously. At each scale,
-the joint representation is decoded by a cascaded Transformer block before
-upsampling and feature fusion produce the final binary change mask.
-ChangeFormer demonstrated state-of-the-art accuracy on the LEVIR-CD benchmark
-and established the hierarchical Siamese Transformer as the reference design
-for subsequent work in the field.
+ChangeFormer \cite{Bandara2022ChangeFormer} constituted a more principled and architecturally complete adoption of hierarchical Vision Transformers for \ac{BCD}. Rather than limiting Transformer processing to a compressed token representation, ChangeFormer applied full multi-head self-attention at each level of a hierarchical Siamese encoder whose design follows the SegFormer-B2 backbone. The bi-temporal inputs are processed through shared patch embedding modules at four resolution levels, and the resulting token sequences of length $N_l = H_l \times W_l$ at level $l$ are jointly processed by \ac{MHSA} blocks that model temporal and spatial dependencies simultaneously. At each scale, the joint representation is decoded by a cascaded Transformer block before upsampling and feature fusion produce the final binary change mask. ChangeFormer demonstrated state-of-the-art accuracy on the LEVIR-CD benchmark and established the hierarchical Siamese Transformer as the reference design for subsequent work in the field.
 
-The underlying mechanism that drives the representational advantage of
-ChangeFormer and BIT over their convolutional predecessors can be understood
-through the properties of the attention map. For each query token at position
-$i$, the row $A_{i,:}$ of the attention matrix encodes a learned distribution
-over the entire input sequence, assigning high weight to tokens that are
-semantically or geometrically most informative for the query. In the context
-of BCD, this means that a query token located at a changing building boundary
-can attend to tokens from distant regions of the same or the other temporal
-image that provide disambiguating context---for example, the consistent
-spectral signature of a nearby unchanged structure that rules out illumination
-as the cause of the observed spectral difference. This long-range
-disambiguation is unavailable to convolutional models and constitutes the
-primary driver of the performance gap between the two paradigms.
+The underlying mechanism that drives the representational advantage of ChangeFormer and BIT over their convolutional predecessors can be understood through the properties of the attention map. For each query token at position $i$, the row $A_{i,:}$ of the attention matrix encodes a learned distribution over the entire input sequence, assigning high weight to tokens that are semantically or geometrically most informative for the query. In the context of \ac{BCD}, this means that a query token located at a changing building boundary can attend to tokens from distant regions of the same or the other temporal image that provide disambiguating context, for example the consistent spectral signature of a nearby unchanged structure that rules out illumination as the cause of the observed spectral difference. This long-range disambiguation is unavailable to convolutional models and constitutes the primary driver of the performance gap between the two paradigms.
 
-HFA-Net \cite{Zheng2022HFANet} demonstrated that the benefit of
-attention-based context modeling extends to spectral as well as spatial
-reasoning. By incorporating high-frequency attention modules that selectively
-weight high-frequency spectral components of the feature representation,
-HFA-Net improved boundary delineation on complex urban scenes where
-low-frequency dominant attention fails to resolve fine-grained rooftop edge
-signals. Swin-CD \cite{Teng2023SwinCD} applied the Swin Transformer backbone
-\cite{Liu2021Swin} to the bi-temporal BCD problem, exploiting the
-shifted-window partition mechanism to reduce the computational cost of
-attention while preserving local spatial context at each resolution level.
-These architectural innovations confirmed the generality of the
-attention-based BCD paradigm and established a clear empirical hierarchy:
-for urban VHR imagery, hierarchical Transformer architectures consistently
-outperform convolutional Siamese networks given comparable training data and
-supervision.
+HFA-Net \cite{Zheng2022HFANet} demonstrated that the benefit of attention-based context modeling extends to spectral as well as spatial reasoning. By incorporating high-frequency attention modules that selectively weight high-frequency spectral components of the feature representation, HFA-Net improved boundary delineation on complex urban scenes where low-frequency dominant attention fails to resolve fine-grained rooftop edge signals. Swin-CD \cite{Teng2023SwinCD} applied the Swin Transformer backbone \cite{Liu2021Swin} to the bi-temporal \ac{BCD} problem, exploiting the shifted-window partition mechanism to reduce the computational cost of attention while preserving local spatial context at each resolution level. These architectural innovations confirmed the generality of the attention-based \ac{BCD} paradigm and established a clear empirical hierarchy: for urban \ac{VHR} imagery, hierarchical Transformer architectures consistently outperform convolutional Siamese networks given comparable training data and supervision.
 
-However, the superior representational capacity of full multi-head
-self-attention comes with a computational cost that severely limits its
-applicability in practice. Standard MHSA forms the dense $N \times N$
-attention matrix $A = \mathrm{softmax}(QK^\top/\sqrt{d})$, whose construction
-requires $\mathcal{O}(N^2)$ time and memory. In bi-temporal BCD, where both
-acquisitions contribute tokens to the sequence processed by each attention
-block, the effective sequence length is doubled relative to single-image
-segmentation, further amplifying the quadratic cost. For VHR imagery at
-sub-meter resolution, the number of spatial tokens $N_l$ at the finest
-encoder stage can exceed tens of thousands, pushing the $N^2$ attention matrix
-beyond the memory capacity of standard research GPUs. This constraint is
-particularly acute for institutions engaged in Earth observation for development
-applications in Latin America and the Global South, where access to large-scale
-GPU clusters cannot be assumed.
+However, the superior representational capacity of full multi-head self-attention comes with a computational cost that severely limits its applicability in practice. Standard \ac{MHSA} forms the dense $N \times N$ attention matrix $A = \mathrm{softmax}(QK^\top/\sqrt{d})$, whose construction requires $\mathcal{O}(N^2)$ time and memory. In bi-temporal \ac{BCD}, where both acquisitions contribute tokens to the sequence processed by each attention block, the effective sequence length is doubled relative to single-image segmentation, further amplifying the quadratic cost. For \ac{VHR} imagery at sub-meter resolution, the number of spatial tokens $N_l$ at the finest encoder stage can exceed tens of thousands, pushing the $N^2$ attention matrix beyond the memory capacity of standard research GPUs. This constraint is particularly acute for institutions engaged in Earth observation for development applications in Latin America and the Global South, where access to large-scale \ac{GPU} clusters cannot be assumed.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.68\textwidth]{graficos/semisupervised.png}
-    \caption{Semi-supervised learning strategies applied to building change
-    detection, where partial label availability motivates the design of
-    architectures that generalize across diverse acquisition conditions.
-    These strategies inform the evaluation framework adopted in this thesis.}
+\caption{Semi-supervised learning strategies applied to building change detection, where partial label availability motivates the design of architectures that generalize across diverse acquisition conditions. These strategies inform the evaluation framework adopted in this thesis.}
     \label{fig:semisupervised_bcd}
 \end{figure}
 
@@ -240,103 +57,23 @@ GPU clusters cannot be assumed.
 \label{sec:ssl-semi-unsup}
 % =============================================================================
 
-The practical limitations of standard MHSA motivated an extensive research
-programme on efficient attention approximations that reduce computational
-complexity from quadratic to near-linear in the sequence length $N$. These
-methods can be broadly categorized into three families: kernel-based linear
-approximations, low-rank matrix factorizations, and sparse or window-restricted
-attention variants.
+The practical limitations of standard \ac{MHSA} motivated an extensive research programme on efficient attention approximations that reduce computational complexity from quadratic to near-linear in the sequence length $N$. These methods can be broadly categorized into three families: kernel-based linear approximations, low-rank matrix factorizations, and sparse or window-restricted attention variants.
 
 
-The kernel-based approach reformulates the softmax attention kernel $\exp(q^\top k / \sqrt{d})$. Following the structural linear attention formulation originally, who is introduced by \cite{Katharopoulos2020Linear}, this kernel is mapped as the inner product of two positive feature map vectors $\kappa(q)^\top \kappa(k)$, where $\kappa: \mathbb{R}^d \to \mathbb{R}^{d'}$ represents a fixed or learned transformation. This substitution enables the key-value product
-$\kappa(K)^\top V$ to be precomputed as a global $d' \times d$ buffer,
-reducing the per-query output computation to a single matrix-vector product
-and bringing total attention complexity down to $\mathcal{O}(N {d'}^2)$,
-linear in $N$. The Performer \cite{Choromanski2021Performer} operationalized
-this approach using random Fourier features as the kernel approximation,
-providing theoretical guarantees on the accuracy of the softmax approximation
-in expectation. Despite the theoretical appeal of these methods, practical
-deployments revealed a systematic accuracy degradation on dense prediction
-tasks relative to the softmax baseline, a degradation that intensifies as the
-spatial resolution and feature diversity of the input increase.
+The kernel-based approach reformulates the softmax attention kernel $\exp(q^\top k / \sqrt{d})$. In the linear attention formulation of \cite{Katharopoulos2020Linear}, this kernel is approximated as the inner product of two positive feature-map vectors $\kappa(q)^\top \kappa(k)$, where $\kappa: \mathbb{R}^d \to \mathbb{R}^{d'}$ represents a fixed or learned transformation. This substitution enables the key-value product $\kappa(K)^\top V$ to be precomputed as a global $d' \times d$ buffer, reducing the per-query output computation to a single matrix-vector product and bringing total attention complexity down to $\mathcal{O}(N {d'}^2)$, linear in $N$. The Performer \cite{Choromanski2021Performer} operationalized this approach using random Fourier features as the kernel approximation, providing theoretical guarantees on the accuracy of the softmax approximation in expectation. Despite the theoretical appeal of these methods, practical deployments revealed a systematic accuracy degradation on dense prediction tasks relative to the softmax baseline, a degradation that intensifies as the spatial resolution and feature diversity of the input increase.
 
-The low-rank family pursues a different strategy: rather than replacing the
-attention kernel, these methods project the key or value matrices into a
-compressed subspace of dimension $r \ll N$ before computing the attention
-map. Linformer \cite{Wang2020Linformer} projects $K$ and $V$ into
-$r$-dimensional spaces using learned linear projections, reducing the
-attention matrix to an $N \times r$ object whose computation costs
-$\mathcal{O}(Nr)$. Nystr\"{o}mformer \cite{Xiong2021Nystromformer} approximates
-the full attention matrix via the Nystr\"{o}m decomposition, selecting $r$
-landmark tokens from the input sequence and expressing the full $N \times N$
-attention in terms of three smaller matrices of size $N \times r$ and
-$r \times r$. These approaches achieve genuine reductions in computational
-cost but depend on the assumption that the attention matrix is
-well-approximated by a low-rank factorization---an assumption that is
-reasonable for classification tasks, where the pooled global representation
-is the target, but problematic for dense prediction tasks, where the model
-must produce an independent output for each of the $N$ tokens.
+The low-rank family pursues a different strategy: rather than replacing the attention kernel, these methods project the key or value matrices into a compressed subspace of dimension $r \ll N$ before computing the attention map. Linformer \cite{Wang2020Linformer} projects $K$ and $V$ into $r$-dimensional spaces using learned linear projections, reducing the attention matrix to an $N \times r$ object whose computation costs $\mathcal{O}(Nr)$. Nystr\"{o}mformer \cite{Xiong2021Nystromformer} approximates the full attention matrix via the Nystr\"{o}m decomposition, selecting $r$ landmark tokens from the input sequence and expressing the full $N \times N$ attention in terms of three smaller matrices of size $N \times r$ and $r \times r$. These approaches achieve genuine reductions in computational cost but depend on the assumption that the attention matrix is well-approximated by a low-rank factorization, an assumption that is reasonable for classification tasks, where the pooled global representation is the target, but problematic for dense prediction tasks, where the model must produce an independent output for each of the $N$ tokens.
 
-The sparse and windowed attention family restricts attention interactions to
-spatially local windows of fixed size $M \times M$---a design pioneered by
-the Swin Transformer \cite{Liu2021Swin}---reducing per-layer complexity
-to $\mathcal{O}(M^2 N)$ with $M \ll N$. Cross-window
-interaction is achieved through cyclic window shifts in alternating layers.
-Sparsifiner \cite{Wei2023Sparsifiner} extends this idea to learned,
-instance-dependent sparse patterns, where the model predicts which token
-pairs to attend to based on a lightweight routing network. While windowed and
-sparse attention preserve local spatial precision within each window, they
-reintroduce a locality constraint that limits the effective receptive field
-of each layer---effectively trading the global context capability of full
-attention for computational tractability. In BCD, this trade-off is
-particularly costly because disambiguation of change events often requires
-integrating information from spatially distant image regions.
+The sparse and windowed attention family restricts attention interactions to spatially local windows of fixed size $M \times M$, a design pioneered by the Swin Transformer \cite{Liu2021Swin}, reducing per-layer complexity to $\mathcal{O}(M^2 N)$ with $M \ll N$. Cross-window interaction is achieved through cyclic window shifts in alternating layers. Sparsifiner \cite{Wei2023Sparsifiner} extends this idea to learned, instance-dependent sparse patterns, where the model predicts which token pairs to attend to based on a lightweight routing network. While windowed and sparse attention preserve local spatial precision within each window, they reintroduce a locality constraint that limits the effective receptive field of each layer, effectively trading the global context capability of full attention for computational tractability. In \ac{BCD}, this trade-off is particularly costly because disambiguation of change events often requires integrating information from spatially distant image regions.
 
-The unifying theoretical pathology underlying all kernel-based and low-rank
-efficient attention methods in dense vision is \emph{rank collapse} of the
-key-value aggregation buffer. When the token-wise contributions to the global
-key-value summary are accumulated uniformly---without differentiating between
-informationally rich and redundant tokens---the resulting buffer occupies a
-low-dimensional subspace of the feature space, discarding the spatial diversity
-that is essential for per-token output discrimination. A formal characterization
-of this phenomenon, provided in \cite{Fan2025RALA}, demonstrates through a
-matrix rank inequality that the output feature matrix is bounded above in rank
-by the minimum of the query feature matrix rank and the buffer rank. In remote
-sensing imagery, where spatial autocorrelation is high within homogeneous
-surface covers such as concrete roofing and dense vegetation, the query feature
-matrix $\kappa(Q)$ is structurally low-rank, guaranteeing collapsed outputs
-even when the buffer itself achieves full rank. This result explains the
-consistent empirical finding that linear attention variants degrade in accuracy
-relative to softmax attention in proportion to the spatial resolution and scene
-heterogeneity of the benchmark---a pattern that is particularly pronounced in
-VHR BCD, where precise boundary localization depends on the diversity of
-per-token output representations.
+The unifying theoretical pathology underlying all kernel-based and low-rank efficient attention methods in dense vision is \emph{rank collapse} of the key-value aggregation buffer. When the token-wise contributions to the global key-value summary are accumulated uniformly, without differentiating between informationally rich and redundant tokens, the resulting buffer occupies a low-dimensional subspace of the feature space, discarding the spatial diversity that is essential for per-token output discrimination. A formal characterization of this phenomenon, provided in \cite{Fan2025RALA}, demonstrates through a matrix rank inequality that the output feature matrix is bounded above in rank by the minimum of the query feature matrix rank and the buffer rank. In remote sensing imagery, where spatial autocorrelation is high within homogeneous surface covers such as concrete roofing and dense vegetation, the query feature matrix $\kappa(Q)$ is structurally low-rank, guaranteeing collapsed outputs even when the buffer itself achieves full rank. This result explains the consistent empirical finding that linear attention variants degrade in accuracy relative to softmax attention in proportion to the spatial resolution and scene heterogeneity of the benchmark, a pattern that is particularly pronounced in \ac{VHR} \ac{BCD}, where precise boundary localization depends on the diversity of per-token output representations.
 
-Rank-Augmented Linear Attention (RALA), as formalized by \cite{Fan2025RALA},
-addresses this pathology through two complementary mechanisms. The global
-query descriptor, computed as the mean of all query vectors, is used to derive
-token-wise relevance weights that differentially amplify the contribution of
-informationally distinct tokens to the buffer accumulation. This breaks the
-uniform aggregation assumption of standard linear attention and increases the
-effective rank of the buffer. A token-wise output modulation---implemented as
-a Hadamard product between the attention output and a learned per-token gating
-signal---then injects local per-token information into the final representation,
-directly increasing the expressive rank of the output matrix beyond the bound
-imposed by the query feature rank. Together, these two mechanisms allow RALA
-to achieve near-linear computational complexity in $N$ while maintaining the
-representational fidelity required for accurate dense prediction. The
-theoretical derivation of these mechanisms is presented in full in
-Section~\ref{sec:rala-theory}, and their integration into the ChangeFormer
-encoder is described in Chapter~\ref{chap:method}.
+\ac{RALA} \cite{Fan2025RALA} addresses this pathology through two complementary mechanisms. The global query descriptor, computed as the mean of all query vectors, is used to derive token-wise relevance weights that differentially amplify the contribution of informationally distinct tokens to the buffer accumulation. This breaks the uniform aggregation assumption of standard linear attention and increases the effective rank of the buffer. A token-wise output modulation implemented as a Hadamard product between the attention output and a learned per-token gating signal then injects local per-token information into the final representation, directly increasing the expressive rank of the output matrix beyond the bound imposed by the query feature rank. Together, these two mechanisms allow \ac{RALA} to achieve near-linear computational complexity in $N$ while maintaining the representational fidelity required for accurate dense prediction. The theoretical derivation of these mechanisms is presented in full in Section~\ref{sec:rala-theory}, and their integration into the ChangeFormer encoder is described in Chapter~\ref{chap:method}.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.68\textwidth]{graficos/selfsupervised.png}
-    \caption{Self-supervised pre-training strategies for Earth observation
-    models. Pre-training on large unlabelled VHR archives reduces dependence
-    on scarce annotated data, and its interplay with efficient attention
-    mechanisms such as RALA constitutes a promising direction for future
-    work identified in Chapter~\ref{chap:conclusiones}.}
+\caption{Self-supervised pre-training strategies for Earth observation models. Pre-training on large unlabelled VHR archives reduces dependence on scarce annotated data, and its interplay with efficient attention mechanisms such as RALA constitutes a promising direction for future work identified in Chapter~\ref{chap:conclusiones}.}
     \label{fig:selfsupervised_bcd}
 \end{figure}
 
@@ -346,127 +83,42 @@ encoder is described in Chapter~\ref{chap:method}.
 \label{sec:related-final}
 % =============================================================================
 
-A recurrent methodological limitation of the BCD literature is its reliance on
-a small number of benchmark datasets that share similar acquisition conditions:
-near-nadir viewing geometry, sub-meter to half-meter spatial resolution, binary
-building-specific change labels, and predominantly planned or semi-planned urban
-morphologies in East Asian metropolitan areas. LEVIR-CD \cite{Zheng2020LEVIR},
-the de facto primary benchmark, consists of 637 image pairs from rapidly
-developing Chinese cities acquired from a Google Earth composite with broadly
-consistent radiometric properties across temporal epochs. DSIFN-CD
-\cite{Zhang2020FusionNetDSIFN} provides heterogeneous multi-class change scenes
-but remains within a nadir-view acquisition geometry. While these datasets have
-been instrumental in establishing comparative performance baselines, they
-constitute a narrow slice of the acquisition diversity encountered in real
-operational deployments---a limitation that systematically biases the research
-community's assessment of model robustness.
+A recurrent methodological limitation of the \ac{BCD} literature is its reliance on a small number of benchmark datasets that share similar acquisition conditions: near-nadir viewing geometry, sub-meter to half-meter spatial resolution, binary building-specific change labels, and predominantly planned or semi-planned urban morphologies in East Asian metropolitan areas. LEVIR-CD \cite{Zheng2020LEVIR}, the de facto primary benchmark, consists of 637 image pairs from rapidly developing Chinese cities acquired from a Google Earth composite with broadly consistent radiometric properties across temporal epochs. DSIFN-CD \cite{Zhang2020FusionNetDSIFN} provides heterogeneous multi-class change scenes but remains within a nadir-view acquisition geometry. While these datasets have been instrumental in establishing comparative performance baselines, they constitute a narrow slice of the acquisition diversity encountered in real operational deployments, a limitation that systematically biases the research community's assessment of model robustness.
 
-The WHU Building Change Detection Dataset \cite{Ji2019WHU} provides a partial
-exception, offering centimetre-scale ($0.3\,\mathrm{m}$~px$^{-1}$) aerial
-imagery over Christchurch, New Zealand---a city that underwent significant
-reconstruction following seismic events---with high positional accuracy and
-precisely delineated building annotations. The very high spatial resolution
-and geometric accuracy of WHU-CD make it an important out-of-distribution
-test for models trained on lower-resolution satellite imagery: features learned
-from $0.5\,\mathrm{m}$ imagery may not transfer cleanly to the finer-grained
-texture, shadow, and rooftop detail visible at $0.3\,\mathrm{m}$. LEVIR-CD+
-\cite{LevirCDPlus} extends the original LEVIR-CD collection with additional
-bi-temporal pairs covering a wider range of urban morphologies, including
-high-density residential blocks, industrial zones, and peri-urban transitional
-landscapes, providing a stress test for models whose training distribution may
-not encompass the diversity of global urban form.
+The WHU Building Change Detection Dataset \cite{Ji2019WHU} provides a partial exception, offering centimetre-scale ($0.3\,\mathrm{m}$~px$^{-1}$) aerial imagery over Christchurch, New Zealand, a city that underwent significant reconstruction following seismic events, with high positional accuracy and precisely delineated building annotations. The very high spatial resolution and geometric accuracy of WHU-CD make it an important out-of-distribution test for models trained on lower-resolution satellite imagery: features learned from $0.5\,\mathrm{m}$ imagery may not transfer cleanly to the finer-grained texture, shadow, and rooftop detail visible at $0.3\,\mathrm{m}$. LEVIR-CD+ \cite{LevirCDPlus} extends the original LEVIR-CD collection with additional bi-temporal pairs covering a wider range of urban morphologies, including high-density residential blocks, industrial zones, and peri-urban transitional landscapes, providing a stress test for models whose training distribution may not encompass the diversity of global urban form.
 
-The SYSU-CD dataset \cite{ShiSYSU2022} introduces a further dimension of
-evaluation difficulty by providing 20\,000 bi-temporal aerial image pairs
-acquired over nine years in Guangzhou, China, with ground-truth labels that
-encompass not only newly constructed buildings but also road alterations,
-vegetation removal, and sea reclamation events. This multi-class annotation
-scheme reflects the complexity of real urban change processes, in which
-building construction is embedded within a broader matrix of simultaneous
-environmental and infrastructure changes. Models trained on binary
-building-only labels and evaluated on SYSU-CD must learn to suppress
-non-building change signals---road resurfacing, seasonal vegetation cycles,
-construction spoil---that would generate false alarms in a standard binary
-formulation. The ability to maintain high precision under this condition is a
-direct measure of the semantic specificity of the learned change representation,
-a property that is not captured by any of the standard nadir-view binary
-benchmarks.
+The SYSU-CD dataset \cite{ShiSYSU2022} introduces a further dimension of evaluation difficulty by providing 20\,000 bi-temporal aerial image pairs acquired over nine years in Guangzhou, China, with ground-truth labels that encompass not only newly constructed buildings but also road alterations, vegetation removal, and sea reclamation events. This multi-class annotation scheme reflects the complexity of real urban change processes, in which building construction is embedded within a broader matrix of simultaneous environmental and infrastructure changes. Models trained on binary building-only labels and evaluated on SYSU-CD must learn to suppress non-building change signals, such as road resurfacing, seasonal vegetation cycles, and construction spoil, that would generate false alarms in a standard binary formulation. The ability to maintain high precision under this condition is a direct measure of the semantic specificity of the learned change representation, a property that is not captured by any of the standard nadir-view binary benchmarks.
 
-The most challenging departure from standard evaluation conditions is
-represented by the S2Looking dataset \cite{ShenS2Looking2021}, which consists
-of 5\,000 bi-temporal image pairs acquired by side-looking satellites at
-$0.5\,\mathrm{m}$ spatial resolution over multiple geographic regions
-worldwide. The oblique acquisition geometry of side-looking sensors introduces
-a family of systematic distortions that have no analogue in nadir-view imagery:
-perspective foreshortening of building facades, layover effects in which tall
-structures appear displaced toward the sensor, shadow geometry that depends on
-both solar angle and viewing angle simultaneously, and apparent positional
-shifts of rooftop boundaries between temporal acquisitions caused by differences
-in the satellite's off-nadir viewing angle. These distortions mean that the
-visual appearance of an unchanged building can differ substantially between two
-side-looking acquisitions taken from slightly different orbital tracks,
-generating strong false change signals in any model that relies on implicit
-assumptions of geometric consistency between temporal pairs. Evaluating BCD
-models on S2Looking thus tests a property distinct from all other benchmarks:
-not the ability to detect structural change against a stable radiometric
-background, but the ability to discriminate genuine change from the
-geometry-induced apparent variation that is ubiquitous in oblique satellite
-imagery.
+The most challenging departure from standard evaluation conditions is represented by the S2Looking dataset \cite{ShenS2Looking2021}, which consists of 5\,000 bi-temporal image pairs acquired by side-looking satellites at $0.5\,\mathrm{m}$ spatial resolution over multiple geographic regions worldwide. The oblique acquisition geometry of side-looking sensors introduces a family of systematic distortions that have no analogue in nadir-view imagery: perspective foreshortening of building facades, layover effects in which tall structures appear displaced toward the sensor, shadow geometry that depends on both solar angle and viewing angle simultaneously, and apparent positional shifts of rooftop boundaries between temporal acquisitions caused by differences in the satellite's off-nadir viewing angle. These distortions mean that the visual appearance of an unchanged building can differ substantially between two side-looking acquisitions taken from slightly different orbital tracks, generating strong false change signals in any model that relies on implicit assumptions of geometric consistency between temporal pairs. Evaluating \ac{BCD} models on S2Looking thus tests a property distinct from all other benchmarks: not the ability to detect structural change against a stable radiometric background, but the ability to discriminate genuine change from the geometry-induced apparent variation that is ubiquitous in oblique satellite imagery.
 
-The historical neglect of these diverse evaluation conditions has created a
-systematic gap between the performance profiles reported in the BCD literature
-and the generalization performance that would be observed in operational
-deployments spanning multiple acquisition systems and global geographic regions.
-Efficient attention variants, in particular, have been evaluated almost
-exclusively on LEVIR-CD and DSIFN-CD, leaving entirely unknown whether the
-rank-collapse pathologies identified for linear attention in dense prediction
-benchmarks manifest more or less severely under the acquisition conditions
-represented by WHU-CD, LEVIR-CD+, SYSU-CD, and S2Looking. The geometric
-distortions of side-looking imagery, the class diversity of SYSU-CD, and the
-centimetre-scale spatial detail of WHU-CD each impose different demands on the
-attention mechanism: the former requires invariance to apparent positional
-shifts, the second requires semantic selectivity, and the third requires the
-preservation of fine-grained spatial detail that rank collapse would suppress.
+The historical neglect of these diverse evaluation conditions has created a systematic gap between the performance profiles reported in the \ac{BCD} literature and the generalization performance that would be observed in operational deployments spanning multiple acquisition systems and global geographic regions. Efficient attention variants, in particular, have been evaluated almost exclusively on LEVIR-CD and DSIFN-CD, leaving entirely unknown whether the rank-collapse pathologies identified for linear attention in dense prediction benchmarks manifest more or less severely under the acquisition conditions represented by WHU-CD, LEVIR-CD+, SYSU-CD, and S2Looking. The geometric distortions of side-looking imagery, the class diversity of SYSU-CD, and the centimetre-scale spatial detail of WHU-CD each impose different demands on the attention mechanism: the former requires invariance to apparent positional shifts, the second requires semantic selectivity, and the third requires the preservation of fine-grained spatial detail that rank collapse would suppress.
 
 
-The experimental program of this thesis closes this gap by subjecting the proposed RALA-ChangeFormer\allowbreak\ evaluation matrix spanning the full range of acquisition conditions described above. This matrix pairs the
-foundational benchmarks---LEVIR-CD and DSIFN-CD---with four extended
-datasets: WHU-CD, LEVIR-CD+, SYSU-CD, and S2Looking. Together they provide
-a comprehensive empirical characterization of the accuracy-efficiency
-trade-off profile of rank-augmented linear attention across heterogeneous
-acquisition geometries, scene complexities, and annotation philosophies
-encountered in global BCD practice. The results, analyzed in
-Chapter~\ref{chap:experiments}, reveal the generalization boundaries of
-rank-augmented attention and identify the specific acquisition
-characteristics that govern whether the efficiency advantage can be
-obtained without meaningful accuracy sacrifice.
+The experimental program of this thesis closes this gap by subjecting the proposed RALA-ChangeFormer \cite{acuna2026efficient} to a comprehensive evaluation matrix spanning the full range of acquisition conditions described above. This matrix pairs the foundational benchmarks LEVIR-CD and DSIFN-CD with four extended datasets: WHU-CD, LEVIR-CD+, SYSU-CD, and S2Looking. Together they provide a comprehensive empirical characterization of the accuracy-efficiency trade-off profile of rank-augmented linear attention across heterogeneous acquisition geometries, scene complexities, and annotation philosophies encountered in global \ac{BCD} practice. The results, analyzed in Chapter~\ref{chap:experiments}, reveal the generalization boundaries of rank-augmented attention and identify the specific acquisition characteristics that govern whether the efficiency advantage can be obtained without meaningful accuracy sacrifice.
 
-Table~\ref{tab:bcd_paradigms} synthesizes the architectural and training
-characteristics of the principal BCD paradigms reviewed in this chapter,
-situating the proposed RALA-ChangeFormer within the broader methodological
-landscape and making explicit the low-rank collapse exposure that
-distinguishes each approach.
+Table~\ref{tab:bcd_paradigms} synthesizes the architectural and training characteristics of the principal \ac{BCD} paradigms reviewed in this chapter, situating the proposed RALA-ChangeFormer within the broader methodological landscape, which also encompasses the semi-supervised (Figure~\ref{fig:semisupervised_bcd}) and self-supervised (Figure~\ref{fig:selfsupervised_bcd}) learning strategies that reduce dependence on scarce annotations, and making explicit the low-rank collapse exposure that distinguishes each approach.
 
 \begin{table}[htbp]
 \centering
 {\footnotesize
-\caption{Comparative overview of building change detection paradigms. Supervision level, backbone type, attention mechanism, and theoretical exposure to low-rank key-value collapse are assessed across representative architectures. RALA-ChangeFormer is the method proposed in this thesis.}
+\caption{Comparative overview of building change detection paradigms. Supervision level, backbone type, attention mechanism, and theoretical exposure to low-rank key-value collapse are assessed across representative architectures. RALA-ChangeFormer is the method proposed in this thesis \cite{acuna2026efficient}.}
 \label{tab:bcd_paradigms}
-% Se aumentó a 2.0cm la primera columna y se aplica \raggedright elástico a las pesadas
-\begin{tabularx}{\textwidth}{p{2.0cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X p{1.6cm} >{\raggedright\arraybackslash}X p{1.7cm}}
+% Weighted X columns: the Method column is widened so that method names plus
+% author-year citations wrap cleanly instead of overflowing the column.
+\begin{tabularx}{\textwidth}{p{1.6cm} >{\hsize=1.45\hsize\raggedright\arraybackslash}X >{\hsize=0.9\hsize\raggedright\arraybackslash}X p{1.4cm} >{\hsize=0.65\hsize\raggedright\arraybackslash}X p{1.5cm}}
 \hline
 \textbf{Paradigm} & \textbf{Method} & \textbf{Backbone} & \textbf{Supervision} & \textbf{Attention Mechanism} & \textbf{Low-Rank Risk} \\
 \hline
-\multicolumn{6}{l}{\textit{Supervised --- Convolutional Siamese}} \\[2pt]
-Supervised & FC-EF \cite{Daudt2018SiamICIP} & VGG-style encoder & Full labels & None & Not applicable \\
-Supervised & SNUNet-CD \cite{Fang2021SNUNetCD} & NestedUNet & Full labels & Channel attention & Minimal \\
-Supervised & DSIFN \cite{Zhang2020FusionNetDSIFN} & VGG encoder & Full labels & Channel attention & Minimal \\
+\multicolumn{6}{l}{\textit{Supervised Convolutional Siamese}} \\[2pt]
+Supervised & FC-EF \cite{Daudt2018SiamICIP} & VGG-style encoder & Labels & None & Not applicable \\
+Supervised & SNUNet-CD \cite{Fang2021SNUNetCD} & NestedUNet & Labels & Channel attention & Minimal \\
+Supervised & DSIFN \cite{Zhang2020FusionNetDSIFN} & VGG encoder & Labels & Channel attention & Minimal \\
 \hline
-\multicolumn{6}{l}{\textit{Supervised --- Transformer-based}} \\[2pt]
-Supervised & BIT \cite{Chen2022BIT} & ResNet-18 + token encoder & Full labels & Cross-temporal MHSA & Moderate \\
-Supervised & ChangeFormer \cite{Bandara2022ChangeFormer} & SegFormer-B2 & Full labels & Full MHSA ($\mathcal{O}(N^2)$) & High \\
+\multicolumn{6}{l}{\textit{Supervised Transformer-based}} \\[2pt]
+Supervised & BIT \cite{Chen2022BIT} & ResNet-18 + token encoder & Labels & Cross-temporal MHSA & Moderate \\
+Supervised & ChangeFormer \cite{Bandara2022ChangeFormer} & SegFormer-B2 & Labels & Full MHSA ($\mathcal{O}(N^2)$) & High \\
 \rowcolor{pastelorange}
-Supervised & \textbf{RALA-ChangeFormer} \cite{Fan2025RALA} & SegFormer-B2 + RALA & Full labels & Rank-augmented linear ($\mathcal{O}(Nd)$) & \textbf{Eliminated} \\
+Supervised & \textbf{RALA-ChangeFormer} \cite{acuna2026efficient} & SegFormer-B2 + RALA & Labels & Rank-augmented linear ($\mathcal{O}(Nd)$) & \textbf{Eliminated} \\
 \hline
 \multicolumn{6}{l}{\textit{Unsupervised}} \\[2pt]
 Unsupervised & SCM \cite{Zhao2023SCM} & SAM-based & No labels & Foundation-model prompt & Not applicable \\

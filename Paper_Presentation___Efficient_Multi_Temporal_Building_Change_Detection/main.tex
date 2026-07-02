@@ -92,7 +92,7 @@
 % ----------------------------------------------------------
 % FRAME 3 — Motivation: VHR Context
 % ----------------------------------------------------------
-\begin{frame}{Motivation — VHR Urban Monitoring in the Global South}
+\begin{frame}{Motivation: VHR Urban Monitoring in the Global South}
 
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
@@ -137,7 +137,7 @@
 % ----------------------------------------------------------
 % FRAME 4 — Problem: The Quadratic Bottleneck (Layout & Text Flow Fixed)
 % ----------------------------------------------------------
-\begin{frame}{Problem Statement — The Quadratic Attention Bottleneck}
+\begin{frame}{Problem Statement: The Quadratic Attention Bottleneck}
 
 \begin{columns}[T]
 \begin{column}{0.52\textwidth}
@@ -202,7 +202,7 @@ $\Rightarrow$ Fully-dense $N_l \times N_l$ affinity matrix allocations required 
 % ----------------------------------------------------------
 % FRAME 6 — Baseline: ChangeFormer Architecture (Vertical Center and Enlarged Figure)
 % ----------------------------------------------------------
-\begin{frame}{Baseline — ChangeFormer Architecture}
+\begin{frame}{Baseline: ChangeFormer Architecture}
 
 \begin{columns}[c] % Alineación vertical perfectamente centrada
 \begin{column}{0.62\textwidth}
@@ -240,7 +240,7 @@ The operational MHSA layers compute and evaluate dense $N_l{\times}N_l$ spatial 
 % ----------------------------------------------------------
 % FRAME 7 — RALA-CF Architecture (Vertical Center and Enlarged Figure)
 % ----------------------------------------------------------
-\begin{frame}{Proposed Architecture — RALA-CF Drop-in Substitution}
+\begin{frame}{Proposed Architecture: RALA-CF Drop-in Substitution}
 
 \begin{columns}[c] % Alineación vertical perfectamente centrada
 \begin{column}{0.58\textwidth}
@@ -275,7 +275,7 @@ Given that $N_l \gg d$ holds at every hierarchical layer, it delivers a sustaine
 % ----------------------------------------------------------
 % FRAME 8 — Mathematical Innovation: RALA Core
 % ----------------------------------------------------------
-\begin{frame}{Mathematical Innovation — Rank-Augmented Linear Attention}
+\begin{frame}{Mathematical Innovation: Rank-Augmented Linear Attention}
 
 \begin{columns}[T]
 \begin{column}{0.42\textwidth}
@@ -324,7 +324,7 @@ Y_i = \phi(X_i)\odot\bigl(\kappa(Q_i)\,B\bigr)
 % ----------------------------------------------------------
 % FRAME 9a — Quantitative: Part I (Cell Color Superposition Hot-Fixed)
 % ----------------------------------------------------------
-\begin{frame}{Quantitative Evaluation — Benchmark Part I: Primary Environments}
+\begin{frame}{Quantitative Evaluation: Primary Benchmarks (Part I)}
 
 \centering
 {\footnotesize Performance evaluation across standard bi-temporal benchmarks. Proposed model cell values are highlighted using the institutional pastelorange background color while keeping titles crystal clear.}
@@ -338,8 +338,8 @@ Y_i = \phi(X_i)\odot\bigl(\kappa(Q_i)\,B\bigr)
 \hline
 \hline
 \multirow{5}{*}{\textbf{LEVIR-CD}} & FC-EF & 86.91 & 83.40 & 71.53 & 98.39 \\ \cline{2-6}
-                          & SNUNet-CD & 89.18 & 88.16 & 78.83 & 98.82 \\ \cline{2-6}
-                          & BIT & 89.24 & 89.31 & 80.68 & 98.93 \\ \cline{2-6}
+                          & SNUNet-CD & 89.18 & 88.16 & 78.83 & 98.87 \\ \cline{2-6}
+                          & BIT & 89.24 & 89.31 & 80.68 & 98.92 \\ \cline{2-6}
                           & ChangeFormer & \textbf{92.05} & \textbf{90.40} & \textbf{82.48} & \textbf{99.04} \\ \cline{2-6}
                           & \textbf{Ours (RALA-CF)} & \cellcolor{pastelorange} 90.08 & \cellcolor{pastelorange} 89.67 & \cellcolor{pastelorange} 81.60 & \cellcolor{pastelorange} 98.99 \\
 \hline
@@ -357,7 +357,7 @@ Y_i = \phi(X_i)\odot\bigl(\kappa(Q_i)\,B\bigr)
 % ----------------------------------------------------------
 % FRAME 9b — Quantitative: Part II (Cell Color Superposition Hot-Fixed)
 % ----------------------------------------------------------
-\begin{frame}{Quantitative Evaluation — Benchmark Part II: Cross-Domain Matrices}
+\begin{frame}{Quantitative Evaluation: Cross-Domain Benchmarks (Part II)}
 
 \centering
 {\footnotesize Cross-domain evaluation tracking performance stability across heterogeneous urban settings, high density domains, and edge benchmarks.}
@@ -371,7 +371,7 @@ Y_i = \phi(X_i)\odot\bigl(\kappa(Q_i)\,B\bigr)
 \hline
 \hline
 \multirow{2}{*}{\textbf{WHU-CD}}    & ChangeFormer & 84.87 & 87.45 & 77.70 & \textbf{99.11} \\ \cline{2-6}
-                           & \textbf{Ours (RALA-CF)} & \cellcolor{pastelorange}\textbf{90.14} & \cellcolor{pastelorange}\textbf{87.85} & \cellcolor{pastelorange}\textbf{78.33} & \cellcolor{pastelorange} 99.05 \\
+                           & \textbf{Ours (RALA-CF)} & \cellcolor{pastelorange}\textbf{90.14} & \cellcolor{pastelorange}\textbf{87.85} & \cellcolor{pastelorange}\textbf{78.33} & \cellcolor{pastelorange} 99.06 \\
 \hline
 \hline
 \multirow{2}{*}{\textbf{LEVIR-CD+}} & ChangeFormer & 79.97 & \textbf{80.65} & \textbf{67.58} & \textbf{98.44} \\ \cline{2-6}
@@ -392,77 +392,69 @@ Y_i = \phi(X_i)\odot\bigl(\kappa(Q_i)\,B\bigr)
 % ----------------------------------------------------------
 % FRAME 10 — Computational Efficiency
 % ----------------------------------------------------------
-\begin{frame}{Computational Efficiency \& OOM-Boundary Scaling}
+\begin{frame}{Computational Efficiency}
 
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
 \centering
-\textbf{\color{utecblue}Resource Profile — $256{\times}256$, Batch 16}
-\vskip 0.15cm
-\resizebox{\linewidth}{!}{
+\textbf{\color{utecblue}Resource Profile ($256{\times}256$, Batch 16)}
+\vskip 0.3cm
+
+\renewcommand{\arraystretch}{1.25}
+\footnotesize
 \begin{tabular}{|l|c|c|c|}
 \hline
 \textbf{Method} & \textbf{Params (M)} & \textbf{GFLOPs} & \textbf{VRAM (GB)} \\
-\hline
-\hline
-FC-EF       &  1.35 &   3.48 &  1.84 \\
-\hline
-SNUNet-CD   & 12.04 &  14.86 &  5.67 \\
-\hline
-BIT         & 11.05 &  17.22 &  5.13 \\
-\hline
-ChangeFormer & 247 & 248.77 & 27 \\
-\hline
+\hline\hline
+FC-EF        &  1.35 &   3.48 &  1.84 \\ \hline
+SNUNet-CD    & 12.04 &  14.86 &  5.67 \\ \hline
+BIT          & 11.05 &  17.22 &  5.13 \\ \hline
+ChangeFormer & 247   & 248.77 & 27 \\ \hline
 \rowcolor{pastelorange}
-\textbf{Ours (RALA-CF)} & \textbf{243} & \textbf{228.62} & \textbf{21} \\
-\hline
+\textbf{Ours (RALA-CF)} & \textbf{243} & \textbf{228.62} & \textbf{21} \\ \hline
 \end{tabular}
-}
 
-\vskip 0.25cm
-\raggedright
-\textbf{\color{utecblue}Efficiency Gains vs. Full Baseline:}
-\vskip 0.05cm
+\vskip 0.5cm
+\footnotesize
 \begin{itemize}
-  \item \textbf{$-$21.8\% VRAM footprint savings}.
-  \item \textbf{$-$8.0\% attention GFLOPs matrix modulation}.
-  \item Preserves equivalent parameters.
+  \item $-$22.2\% peak VRAM \quad $-$8.1\% GFLOPs.
+  \item Equivalent capacity; gains from attention restructuring.
 \end{itemize}
-\end{column}
 
-\begin{column}{0.48\textwidth}
+\end{frame}
+
+% ----------------------------------------------------------
+% FRAME 10b — OOM-Boundary Scaling
+% ----------------------------------------------------------
+\begin{frame}{OOM-Boundary Scaling}
+
 \centering
 \textbf{\color{utecblue}Max Feasible Batch Size Before OOM}
-\vskip 0.15cm
-\resizebox{\linewidth}{!}{
+\vskip 0.3cm
+
+\renewcommand{\arraystretch}{1.25}
+\footnotesize
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Resolution Scale} & \textbf{Baseline CF} & \textbf{Ours (RALA)} & \textbf{Net Gain} \\
-\hline
-\hline
-$256{\times}256$    & 32 & \textbf{48} & $+50\%$ \\
-\hline
-$512{\times}512$    &  8 & \textbf{12} & $+50\%$ \\
-\hline
-$1024{\times}1024$  &  2 & \textbf{3}  & $+50\%$ \\
-\hline
+\textbf{Resolution} & \textbf{ChangeFormer} & \textbf{Ours (RALA-CF)} & \textbf{Gain} \\
+\hline\hline
+$256{\times}256$    & 32 & \textbf{48} & $+50\%$ \\ \hline
+$512{\times}512$    &  8 & \textbf{12} & $+50\%$ \\ \hline
+$1024{\times}1024$  &  2 & \textbf{3}  & $+50\%$ \\ \hline
 \end{tabular}
-}
 
-\vskip 0.25cm
-\raggedright
-\textbf{\color{utecblue}Sustained Memory Scaling Paradigm:}\\
+\vskip 0.5cm
 \footnotesize
-Attention matrices span approx. 1/3 of complete VRAM allocations. Eliminating full-rank $N_l \times N_l$ storage paths releases a continuous constant fraction of system memory, driving a stable $+50\%$ training scale expansion across the spectrum.
-\end{column}
-\end{columns}
+\begin{itemize}
+  \item Attention maps $\approx 1/3$ of peak VRAM.
+  \item Removing $N_l{\times}N_l$ storage $\Rightarrow$ uniform $+50\%$ batch headroom.
+  \item Unlocks native $1024{\times}1024$ training.
+\end{itemize}
 
 \end{frame}
 
 % ----------------------------------------------------------
 % FRAME 11 — Qualitative: WHU-CD (Expanded Column to prevent leaking)
 % ----------------------------------------------------------
-\begin{frame}{Qualitative Analysis — WHU-CD (Nadir Aerial Geometry)}
+\begin{frame}{Qualitative Analysis: WHU-CD (Nadir Aerial Geometry)}
 
 \begin{columns}[T]
 \begin{column}{0.68\textwidth}
@@ -472,6 +464,7 @@ Attention matrices span approx. 1/3 of complete VRAM allocations. Eliminating fu
 \hfill
 \begin{column}{0.29\textwidth}
 \vspace{0.1cm}
+\footnotesize
 \textbf{\color{utecblue}Error Metric Maps:}
 \vskip 0.05cm
 {\color{white}\rule{6pt}{6pt}} TP (White) \hfill {\color{black}\rule{6pt}{6pt}} TN (Black)\\
@@ -497,7 +490,7 @@ Attention matrices span approx. 1/3 of complete VRAM allocations. Eliminating fu
 % ----------------------------------------------------------
 % FRAME 12 — Qualitative: S2Looking Part I (Split into 2 slides)
 % ----------------------------------------------------------
-\begin{frame}{Qualitative Analysis — S2Looking (Oblique Geometry Failure)}
+\begin{frame}{Qualitative Analysis: S2Looking (Oblique Geometry Failure)}
 
 \begin{columns}[T]
 \begin{column}{0.68\textwidth}
@@ -507,12 +500,13 @@ Attention matrices span approx. 1/3 of complete VRAM allocations. Eliminating fu
 \hfill
 \begin{column}{0.29\textwidth}
 \vspace{0.1cm}
+\footnotesize
 \textbf{\color{utecblue}Geometric Failure Analysis:}
 \vskip 0.15cm
 \begin{itemize}
-  \item Oblique angles trigger severe structural parallax displacement.
-  \item Unchanged tall building facades display artificial offsets.
-  \item Ring-shaped false-positive halos degrade overall accuracy scores.
+  \item Oblique angles trigger structural parallax displacement.
+  \item Unchanged tall facades display artificial offsets.
+  \item Ring-shaped false-positive halos degrade accuracy.
 \end{itemize}
 \end{column}
 \end{columns}
@@ -524,24 +518,67 @@ Attention matrices span approx. 1/3 of complete VRAM allocations. Eliminating fu
 \end{frame}
 
 % ----------------------------------------------------------
-% FRAME 12b — Qualitative: S2Looking Part II (Dedicated Core Insights Frame)
+% FRAME 12.5 — Oblique-Angle Parallax Mechanism (Image A vs Image B)
 % ----------------------------------------------------------
-\begin{frame}{Qualitative Analysis — S2Looking Architectural Limits}
+\begin{frame}{Oblique Geometry: Why Parallax Triggers False Change}
 
-\vskip 0.4cm
-\textbf{\color{red!80!black}Core Boundary Insight — The Parallax Limit:}
-\vskip 0.3cm
-
-\begin{itemize}
-  \item \textbf{Error Pattern Invariance}: Error topologies and false positive distributions remain completely identical across choices of full-rank or linear attention layers.
-  \item \textbf{Backbone-Level Constraints}: The geometric failure mode originates natively in the representation limitations of the SegFormer-B2 convolutional backbone, not in the attention module itself.
-  \item \textbf{Metrological Reality}: In remote sensing tasks featuring severe oblique acquisition tracking, no change in the mathematical formulation of the attention layers can recover perspective distortions without explicit stereophotogrammetric depth alignment heads.
-\end{itemize}
-
-\vskip 0.6cm
+\begin{columns}[c]
+\begin{column}{0.52\textwidth}
 \centering
-\footnotesize\color{charcoal}
-This analytical boundary confirms that RALA-CF achieves maximum efficiency without introducing custom model degradation, framing the remaining challenges as a data view geometry issue.
+\begin{tikzpicture}[scale=0.92, >=stealth, font=\scriptsize]
+  \draw[thick] (-0.3,0) -- (5.6,0);
+  \fill[gray!30,draw=black] (2.4,0) rectangle (3.0,2.2);
+  \node[font=\tiny] at (2.7,-0.28) {building};
+  \node at (0.5,3.35) {$\blacktriangle$};
+  \node at (4.9,3.35) {$\blacktriangle$};
+  \node[font=\tiny] at (0.5,3.72) {sat $t_1$};
+  \node[font=\tiny] at (4.9,3.72) {sat $t_2$};
+  \draw[blue,->] (0.6,3.2) -- (3.0,2.25);
+  \draw[red,->]  (4.8,3.2) -- (2.4,2.25);
+  \draw[blue,dashed] (3.0,2.2) -- (3.95,0);
+  \draw[red,dashed]  (2.4,2.2) -- (1.55,0);
+  \fill[blue] (3.95,0) circle (1.4pt); \node[blue,font=\tiny,below] at (3.95,0) {A};
+  \fill[red]  (1.55,0) circle (1.4pt); \node[red,font=\tiny,below] at (1.55,0) {B};
+  \draw[<->,thick] (1.55,-0.6) -- (3.95,-0.6);
+  \node[font=\tiny,below] at (2.75,-0.6) {apparent offset $\Delta$};
+\end{tikzpicture}
+\end{column}
+\begin{column}{0.46\textwidth}
+\footnotesize
+\textbf{\color{utecblue}Image A ($t_1$) vs. Image B ($t_2$):}
+\vskip 0.2cm
+\begin{itemize}
+  \item Acquired at different off-nadir angles.
+  \item Tall structures project to shifted ground positions (A $\neq$ B).
+  \item Offset $\Delta$ on an \textbf{unchanged} building $\Rightarrow$ ring-shaped false-positive halo.
+\end{itemize}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+% ----------------------------------------------------------
+% FRAME 14 — S2Looking Architectural Limits (keywords + qualitative highlight)
+% ----------------------------------------------------------
+\begin{frame}{S2Looking: Architectural Limits}
+
+\begin{columns}[c]
+\begin{column}{0.48\textwidth}
+\footnotesize
+\textbf{\color{red!80!black}The Parallax Limit:}
+\vskip 0.25cm
+\begin{itemize}
+  \item \textbf{Error-pattern invariance}: ChangeFormer $\equiv$ RALA-CF halos.
+  \item \textbf{Backbone-level cause}: SegFormer-B2, not attention.
+  \item \textbf{Irreducible by attention}: requires geometric / depth alignment.
+\end{itemize}
+\end{column}
+\begin{column}{0.50\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{plots/qualitative_S2Looking.pdf}\\
+{\tiny\color{charcoal}Identical FP halos (red) in the ChangeFormer and RALA-CF columns.}
+\end{column}
+\end{columns}
 
 \end{frame}
 
@@ -552,35 +589,34 @@ This analytical boundary confirms that RALA-CF achieves maximum efficiency witho
 % ----------------------------------------------------------
 % FRAME 13 — Conclusions
 % ----------------------------------------------------------
-\begin{frame}{General Conclusions \& Architectural Boundaries}
+\begin{frame}{Core Empirical Milestones}
 
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{\color{utecblue}Core Empirical Milestones:}
-\vskip 0.15cm
+\footnotesize
 \begin{itemize}
-  \item Map quadratic encoder limits down to strict linear complexity bounds: $\mathcal{O}(N_l^2d) \to \mathcal{O}(N_ld^2)$.
-  \item Mitigate low-rank collapse paths via Hadamard product output token modulation $\phi(\cdot)$.
-  \item Retain structural accuracy parity across the comprehensive 6-dataset evaluation matrix ($\Delta = +0.14$\,pp mean F1).
-  \item Achieve a 22.2\% VRAM saving, 8\% GFLOPs mitigation, and an exact uniform 50\% training batch size expansion.
+  \item Quadratic $\to$ linear encoder attention: $\mathcal{O}(N_l^2 d) \to \mathcal{O}(N_l d^2)$.
+  \item Rank-augmentation $+$ Hadamard $\phi(\cdot)$ prevent low-rank collapse.
+  \item Near-parity across 6 datasets: mean $-0.94$\,pp F1; surpasses ChangeFormer on WHU-CD.
+  \item Efficiency: $-22.2\%$ VRAM, $-8.1\%$ GFLOPs, uniform $+50\%$ batch size.
 \end{itemize}
-\end{column}
 
-\begin{column}{0.48\textwidth}
-\textbf{\color{red!80!black}Identified Research Limitations:}
-\vskip 0.15cm
-\begin{itemize}
-  \item \textbf{Geometric Parallax Sensitivity}: Side-looking perspective deformations (S2Looking) represent a backbone limit that attention triumphs cannot solve alone.
-  \item \textbf{Annotation Label Discrepancies}: Semantic multi-class class noise (SYSU-CD) triggers false positives on non-building changes.
-  \item \textbf{Absolute Hardware Thresholds}: Full patch size deployment on low-tier consumer GPUs ($\leq 8$\,GB) remains out of reach.
-\end{itemize}
-\end{column}
-\end{columns}
-
-\vskip 0.35cm
+\vskip 0.6cm
 \centering
 \footnotesize\color{charcoal}
-Accuracy, efficiency profiles, and error maps validate the central thesis hypothesis: Rank-augmented linear attention provides a mathematically sound, non-heuristic path toward highly efficient multi-temporal remote sensing.
+Rank-augmented linear attention: a mathematically sound, non-heuristic path to efficient multi-temporal remote sensing.
+
+\end{frame}
+
+% ----------------------------------------------------------
+% FRAME 16 — Identified Research Limitations
+% ----------------------------------------------------------
+\begin{frame}{Identified Research Limitations}
+
+\footnotesize
+\begin{itemize}
+  \item \textbf{Geometric parallax} (S2Looking): a backbone limit, not solvable by attention alone.
+  \item \textbf{Multi-class label mismatch} (SYSU-CD): false positives on non-building change.
+  \item \textbf{Hardware floor}: full-resolution training on $\leq 8$\,GB GPUs still out of reach.
+\end{itemize}
 
 \end{frame}
 
@@ -591,29 +627,28 @@ Accuracy, efficiency profiles, and error maps validate the central thesis hypoth
 % ----------------------------------------------------------
 % FRAME 14 — Future Research
 % ----------------------------------------------------------
-\begin{frame}{Future Lines of Research — Global South Focus}
+\begin{frame}{Technical Foundations and Extensions}
 
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{\color{utecblue}Technical Foundations and Extensions:}
-\vskip 0.15cm
+\footnotesize
 \begin{enumerate}
-  \item \textbf{Dynamic Rank Adaptation Heuristics}: Implement online lightweight Singular Value Decomposition (SVD) tracking within the KV buffer matrix $B$.
-  \item \textbf{Upstream Spatial Alignment Modules}: Integrate stereophotogrammetric depth networks (DEM tracking) to standardize parallax distortions before patch tokenization.
-  \item \textbf{Multi-Temporal Sequence Ingestion}: Extend $Q_g$ modeling to ingest $T > 2$ sequential images for monitoring continuous construction pipelines.
+  \item \textbf{Dynamic rank adaptation}: online SVD tracking of the KV buffer $B$.
+  \item \textbf{Geometric pre-alignment}: stereophotogrammetric / DEM depth to correct parallax before tokenization.
+  \item \textbf{Multi-temporal ingestion}: extend $Q_g$ to $T > 2$ acquisitions for continuous construction monitoring.
 \end{enumerate}
-\end{column}
 
-\begin{column}{0.48\textwidth}
-\textbf{\color{utecblue}Regional Benchmarks and Local Deployment:}
-\vskip 0.15cm
+\end{frame}
+
+% ----------------------------------------------------------
+% FRAME 18 — Regional Benchmarks and Local Deployment
+% ----------------------------------------------------------
+\begin{frame}{Regional Benchmarks and Local Deployment}
+
+\footnotesize
 \begin{enumerate}
-  \item \textbf{Latin American BCD Benchmark Architecture}: Build PeruSAT-1 open datasets covering complex metropolitan zones (Lima, São Paulo, Bogotá).
-  \item \textbf{Informal Urban Settlements Ontologies}: Calibrate evaluation metrics for informal self-construction monitoring.
-  \item \textbf{Operational Urban Planning Tooling}: Develop mosaicking inference engines for municipal risk tracking and vulnerability assessment.
+  \item \textbf{Latin American BCD benchmark}: PeruSAT-1 datasets over Lima, São Paulo, Bogotá.
+  \item \textbf{Informal-settlement ontologies}: metrics calibrated for self-construction monitoring.
+  \item \textbf{Operational tooling}: city-scale mosaicking for planning and risk assessment.
 \end{enumerate}
-\end{column}
-\end{columns}
 
 \end{frame}
 
@@ -679,7 +714,7 @@ Open-source implementation:\\[4pt]
 \vspace{0.8cm}
 \footnotesize\color{charcoal}
 \textit{Ricardo Amiel Acuña Villogas}\\
-\textit{Data Science — UTEC, Lima, Perú}\\
+\textit{Data Science, UTEC, Lima, Perú}\\
 \textit{ricardo.acuna@utec.edu.pe}
 \end{column}
 
