@@ -89,6 +89,45 @@
 \section{Motivation}
 % ==========================================================
 
+\begin{frame}{Building Change Detection}
+
+\begin{columns}[T]
+% ---------- Left column ----------
+\begin{column}{0.42\textwidth}
+
+\includegraphics[
+  width=\linewidth,
+  height=0.7\textheight,
+  keepaspectratio
+]{vectorized-LEVIRCD.pdf}
+
+\end{column}
+
+% ---------- Right column ----------
+\begin{column}{0.48\textwidth}
+
+\small
+\textbf{Building Change Detection (BCD)} compares \textbf{bi-temporal satellite images} to identify construction, demolition, or structural change.
+
+\vspace{0.4cm}
+
+\textbf{Why it matters}
+\begin{itemize}
+    \item Urban growth monitoring.
+    \item Disaster response.
+    \item Security and regulation.
+    \item Planning and poverty analysis.
+\end{itemize}
+
+\end{column}
+\end{columns}
+
+\vspace{0.3cm}
+\footnotesize
+\tiny{\textit{A Spatial-Temporal Attention-Based Method and a New Dataset for Remote Sensing Image Change Detection. (Zheng et al.)}}
+
+\end{frame}
+
 % ----------------------------------------------------------
 % FRAME 3 — Motivation: VHR Context
 % ----------------------------------------------------------
@@ -99,34 +138,16 @@
 \centering
 \includegraphics[height=0.55\textheight,keepaspectratio]{PeruSat.png}\\
 \vspace{2pt}
-{\tiny\color{charcoal}\textit{VHR Centimetric Scans (PeruSAT-1: 0.70\,m/px)}}
+{\tiny\color{charcoal}\textit{Conida PeruSat-1 sample)}}
 \end{column}
 
 \begin{column}{0.48\textwidth}
 \centering
 \includegraphics[height=0.55\textheight,keepaspectratio]{LandCover.png}\\
 \vspace{2pt}
-{\tiny\color{charcoal}\textit{Unregulated Spatiotemporal Urban Footprints (Lima Metropolitan Area)}}
+{\tiny{Land cover changes in Lima Metropolitan Area for the years 2008 and 2021}}
 \end{column}
 \end{columns}
-
-\vspace{8pt}
-{\footnotesize
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\begin{itemize}
-  \item Rapid informal peri-urban expansion.
-  \item High structural densification across Global South scenes.
-\end{itemize}
-\end{column}
-\begin{column}{0.48\textwidth}
-\begin{itemize}
-  \item Land-use regulation gaps and elevated seismic vulnerability.
-  \item PeruSAT-1 platform availability: 0.70\,m/px panchromatic capacity.
-\end{itemize}
-\end{column}
-\end{columns}
-}
 
 \end{frame}
 
@@ -151,22 +172,49 @@
 \vspace{0.1cm}
 \textbf{\color{utecblue}Computational Constraints:}
 \vskip 0.1cm
+\small
 \begin{itemize}
-  \item \textbf{Quadratic Scaling}: $\mathcal{O}(N_l^2 d)$ operations.
-  \item \textbf{VRAM Overheads}: Scales exponentially on dense configurations.
-  \item \textbf{OOM Vulnerability}: Failures under high-resolution patches.
-  \item \textbf{Hardware Barriers}: Restricts consumer edge deployment.
+    \item High computational cost: $\mathcal{O}(N^2)$.
+    \item Large memory footprint.
+    \item Small feasible batch sizes.
+    \item Bi-temporal processing doubles computation.
+    \item Limits deployment on large or OOD datasets.
 \end{itemize}
 
-\vskip 0.25cm
-{\footnotesize\color{charcoal}
-At $256{\times}256$ input dimensions:\\
-$N_l \in \{4096,\,1024,\,256,\,64\}$\\[3pt]
-$\Rightarrow$ Fully-dense $N_l \times N_l$ affinity matrix allocations required in GPU memory tiers.
-}
 \end{column}
 \end{columns}
 
+\end{frame}
+
+\begin{frame}{Main Goal}
+
+\begin{center}
+{\Large\bfseries
+Design a computationally efficient attention mechanism that reduces cost while preserving segmentation accuracy.
+}
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Goals}
+\begin{itemize}
+    \item Reduce VRAM usage and FLOPs in the encoder.
+    \item Increase feasible batch sizes for large-scale BCD training.
+    \item Maintain comparable performance on six different BCD datasets.
+    \item \textbf{Scope}:  Train and validation on public benchmarks LEVIR-CD/LEVIR-CD+ (Zheng et al.) and DSIFN-CD (Zhang et al.),  WHU-CD (Ji et al.), SYSU-CD(Shi et al.) and S2Looking (Shen et al.).
+\end{itemize}
+\end{frame}
+
+% ----------------------------------------------------------
+% FRAME — Contributions
+% ----------------------------------------------------------
+\begin{frame}{Contributions}
+\begin{itemize}
+    \item \textbf{A lightweight change detection model.} We propose RALA-ChangeFormer, a hierarchical Siamese Transformer that replaces the quadratic multi-head self-attention of ChangeFormer with rank-augmented linear attention, reducing attention-related peak GPU memory consumption and enabling larger, more stable training configurations without sacrificing segmentation accuracy.
+    \item \textbf{A complete and robust benchmarking.} We conduct a systematic cross-domain evaluation across six geographically and methodologically diverse datasets (LEVIR-CD, DSIFN-CD, WHU-CD, LEVIR-CD+, SYSU-CD, and S2Looking), jointly reporting accuracy and efficiency metrics (FLOPs, peak memory, maximum feasible batch size, and training throughput) to characterize the generalization boundaries of rank-augmented linear attention.
+    \item \textbf{A peer-reviewed publication.} The core of this work has been accepted and published at the 21st International Conference on Computer Vision Theory and Applications (VISAPP 2026), validating the relevance and soundness of the proposed approach.
+    \item \textbf{An ongoing journal extension.} Building on the accepted conference paper, we are currently developing an extended version for a journal submission, broadening the experimental evaluation and deepening the analysis of the efficiency--accuracy trade-offs reported throughout this thesis.
+\end{itemize}
 \end{frame}
 
 % ==========================================================
@@ -179,7 +227,7 @@ $\Rightarrow$ Fully-dense $N_l \times N_l$ affinity matrix allocations required 
 \begin{frame}{State of the Art in Building Change Detection (BCD)}
 
 \begin{center}
-\begin{minipage}{0.96\linewidth}
+\begin{minipage}{\linewidth}
 \centering
 \begin{tikzpicture}
   \node[anchor=south west, inner sep=0] (img) at (0,0)
@@ -192,11 +240,6 @@ $\Rightarrow$ Fully-dense $N_l \times N_l$ affinity matrix allocations required 
 \end{minipage}
 \end{center}
 
-\vspace{2pt}
-{\footnotesize
-\textbf{ChangeFormer Paradigm (Highlighted)}: Hierarchical Siamese Transformer framework. Effectively handles macro-scale spatial dependencies, but remains fundamentally bounded by the full-rank quadratic restrictions of its initial multi-head self-attention layout.
-}
-
 \end{frame}
 
 % ----------------------------------------------------------
@@ -205,29 +248,11 @@ $\Rightarrow$ Fully-dense $N_l \times N_l$ affinity matrix allocations required 
 \begin{frame}{Baseline: ChangeFormer Architecture}
 
 \begin{columns}[c] % Alineación vertical perfectamente centrada
-\begin{column}{0.62\textwidth}
+\begin{column}{\textwidth}
 \centering
 \includegraphics[width=\linewidth,height=0.74\textheight,keepaspectratio]{ChangeFormer.png}\\
 \vspace{2pt}
-{\tiny\color{charcoal}\textit{Bandara \& Patel, IGARSS 2022}}
-\end{column}
-
-\begin{column}{0.34\textwidth}
-{\footnotesize
-\textbf{\color{utecblue}Architectural Components:}
-\vskip 0.1cm
-\begin{itemize}
-  \item SegFormer-B2 backbone integration.
-  \item Siamese dual-temporal weight configuration.
-  \item Traditional MHSA blocks across 4 stages.
-  \item MLP segmentation decoder.
-\end{itemize}
-
-\vskip 0.5cm
-\textbf{\color{red!80!black}Core Computational Bottleneck:}
-\vskip 0.1cm
-The operational MHSA layers compute and evaluate dense $N_l{\times}N_l$ spatial maps, generating a strict quadratic overhead threshold.
-}
+\tiny{\textit{A Transformer-based Siamese Network for Change Detection} (Bandara et al.)}
 \end{column}
 \end{columns}
 
@@ -247,11 +272,11 @@ The operational MHSA layers compute and evaluate dense $N_l{\times}N_l$ spatial 
 \centering
 \includegraphics[width=\linewidth,height=0.74\textheight,keepaspectratio]{ChangeFormer.png}\\
 \vspace{2pt}
-{\tiny\color{charcoal}\textit{Proposed modification: Exclusive MHSA $\rightarrow$ RALA substitution across the 4 encoder blocks.}}
+{\tiny\color{charcoal}\textit{A Transformer-based Siamese Network for Change Detection.}}
 \end{column}
 
 \begin{column}{0.38\textwidth}
-{\footnotesize
+{\footnotesize\raggedright
 \textbf{\color{utecblue}Drop-In Engineering Scope:}
 \vskip 0.1cm
 \begin{itemize}
@@ -317,6 +342,43 @@ Y_i = \phi(X_i)\odot\bigl(\kappa(Q_i)\,B\bigr)
 
 \end{frame}
 
+\begin{frame}{Datasets: LEVIR-CD}
+
+\begin{center}
+\includegraphics[
+  width=0.95\linewidth,
+  height=0.7\textheight,
+  keepaspectratio
+]{LEVIR2.png}
+\end{center}
+
+\vspace{0.3cm}
+
+\vspace{0.2cm}
+\footnotesize
+\tiny{\textit{A Spatial-Temporal Attention-Based Method and a New Dataset for Remote Sensing Image Change Detection} (Zhang et al.)}
+
+\end{frame}
+
+
+\begin{frame}{Datasets: DSIFN-CD}
+
+\begin{center}
+\includegraphics[
+  width=0.95\linewidth,
+  height=0.7\textheight,
+  keepaspectratio
+]{DSIFN2.png}
+\end{center}
+
+\vspace{0.3cm}
+
+\vspace{0.2cm}
+\footnotesize
+\tiny{\textit{A Dense Siamese Network for Change Detection in Remote Sensing Images} (Zhang et al.)}
+
+\end{frame}
+
 % ==========================================================
 \section{Experiments \& Results}
 % ==========================================================
@@ -327,8 +389,6 @@ Y_i = \phi(X_i)\odot\bigl(\kappa(Q_i)\,B\bigr)
 \begin{frame}{Quantitative Evaluation: Primary Benchmarks (Part I)}
 
 \centering
-{\footnotesize Performance evaluation across standard bi-temporal benchmarks. Proposed model cell values are highlighted using the institutional pastelorange background color while keeping titles crystal clear.}
-\vskip 0.25cm
 
 \renewcommand{\arraystretch}{1.15}
 \small
@@ -360,8 +420,6 @@ Y_i = \phi(X_i)\odot\bigl(\kappa(Q_i)\,B\bigr)
 \begin{frame}{Quantitative Evaluation: Cross-Domain Benchmarks (Part II)}
 
 \centering
-{\footnotesize Cross-domain evaluation tracking performance stability across heterogeneous urban settings, high density domains, and edge benchmarks.}
-\vskip 0.25cm
 
 \renewcommand{\arraystretch}{1.15}
 \small
@@ -461,14 +519,13 @@ $1024{\times}1024$  &  2 & \textbf{3}  & $+50\%$ \\ \hline
 \centering
 \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{plots/qualitative_WHU_CD.pdf}
 \end{column}
-\hfill
 \begin{column}{0.29\textwidth}
 \vspace{0.1cm}
-\footnotesize
+\footnotesize\raggedright
 \textbf{\color{utecblue}Error Metric Maps:}
 \vskip 0.05cm
-{\color{white}\rule{6pt}{6pt}} TP (White) \hfill {\color{black}\rule{6pt}{6pt}} TN (Black)\\
-{\color{red}\rule{6pt}{6pt}} FP (Red) \hfill {\color{blue}\rule{6pt}{6pt}} FN (Blue)
+{\color{white}\rule{6pt}{6pt}} TP (White)\quad {\color{black}\rule{6pt}{6pt}} TN (Black)\\
+{\color{red}\rule{6pt}{6pt}} FP (Red)\quad {\color{blue}\rule{6pt}{6pt}} FN (Blue)
 
 \vskip 0.3cm
 \textbf{\color{utecblue}Nadir Geometry Insights:}
@@ -497,10 +554,9 @@ $1024{\times}1024$  &  2 & \textbf{3}  & $+50\%$ \\ \hline
 \centering
 \includegraphics[width=\linewidth,height=0.68\textheight,keepaspectratio]{plots/qualitative_S2Looking.pdf}
 \end{column}
-\hfill
 \begin{column}{0.29\textwidth}
 \vspace{0.1cm}
-\footnotesize
+\footnotesize\raggedright
 \textbf{\color{utecblue}Geometric Failure Analysis:}
 \vskip 0.15cm
 \begin{itemize}
@@ -611,12 +667,21 @@ Rank-augmented linear attention: a mathematically sound, non-heuristic path to e
 % ----------------------------------------------------------
 \begin{frame}{Identified Research Limitations}
 
+\begin{columns}[c]
+\begin{column}{0.50\textwidth}
 \footnotesize
 \begin{itemize}
   \item \textbf{Geometric parallax} (S2Looking): a backbone limit, not solvable by attention alone.
   \item \textbf{Multi-class label mismatch} (SYSU-CD): false positives on non-building change.
   \item \textbf{Hardware floor}: full-resolution training on $\leq 8$\,GB GPUs still out of reach.
 \end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{plots/qualitative_SYSU_CD.pdf}\\
+{\tiny\color{charcoal}SYSU-CD: false positives (red) on non-building multi-class change.}
+\end{column}
+\end{columns}
 
 \end{frame}
 
@@ -643,12 +708,21 @@ Rank-augmented linear attention: a mathematically sound, non-heuristic path to e
 % ----------------------------------------------------------
 \begin{frame}{Regional Benchmarks and Local Deployment}
 
+\begin{columns}[c]
+\begin{column}{0.52\textwidth}
 \footnotesize
 \begin{enumerate}
-  \item \textbf{Latin American BCD benchmark}: PeruSAT-1 datasets over Lima, São Paulo, Bogotá.
+  \item \textbf{Latin American BCD benchmark}: PeruSAT-1 datasets over Lima or other states, expand to Sao Paulo, Bogotá.
   \item \textbf{Informal-settlement ontologies}: metrics calibrated for self-construction monitoring.
   \item \textbf{Operational tooling}: city-scale mosaicking for planning and risk assessment.
 \end{enumerate}
+\end{column}
+\begin{column}{0.46\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{PeruSat.png}\\
+{\tiny\color{charcoal}Peru sample Area: target of the proposed regional benchmark.}
+\end{column}
+\end{columns}
 
 \end{frame}
 
