@@ -21,20 +21,33 @@
 /Resultados_RALA-ChangeFormer/Datasets/S2Looking-BENCH/train
 /Resultados_RALA-ChangeFormer/Datasets/S2Looking-BENCH/val
 /Resultados_RALA-ChangeFormer/Datasets/S2Looking-BENCH/test
-
 /Resultados_RALA-ChangeFormer/LEVIR+/V7_LP/best_ckpt.pt
 /Resultados_RALA-ChangeFormer/LEVIR+/V7_LP/last_ckpt.pt
+/Resultados_RALA-ChangeFormer/LEVIR+/V6_LEVIRPLUS/best_ckpt.pt
+/Resultados_RALA-ChangeFormer/LEVIR+/V6_LEVIRPLUS/last_ckpt.pt
 
 /Resultados_RALA-ChangeFormer/S2Looking/V7_S2Looking/best_ckpt.pt
 /Resultados_RALA-ChangeFormer/S2Looking/V7_S2Looking/last_ckpt.pt
+/Resultados_RALA-ChangeFormer/S2Looking/V6_S2Looking/best_ckpt.pt
+/Resultados_RALA-ChangeFormer/S2Looking/V6_S2Looking/last_ckpt.pt
 
 /Resultados_RALA-ChangeFormer/SYSU/V7_SY/best_ckpt.pt
 /Resultados_RALA-ChangeFormer/SYSU/V7_SY/last_ckpt.pt
+/Resultados_RALA-ChangeFormer/SYSU/V6_SYSU/best_ckpt.pt
+/Resultados_RALA-ChangeFormer/SYSU/V6_SYSU/last_ckpt.pt
 
 /Resultados_RALA-ChangeFormer/WHU/V7_WHU/best_ckpt.pt
 /Resultados_RALA-ChangeFormer/WHU/V7_WHU/last_ckpt.pt
+/Resultados_RALA-ChangeFormer/WHU/V6_WHU/best_ckpt.pt
+/Resultados_RALA-ChangeFormer/WHU/V6_WHU/last_ckpt.pt
 
 /Resultados_RALA-ChangeFormer/predictions/V7_LP_test/*.png
 /Resultados_RALA-ChangeFormer/predictions/V7_S2Looking_test/*.png
 /Resultados_RALA-ChangeFormer/predictions/V7_SY_test/*.png
 /Resultados_RALA-ChangeFormer/predictions/V7_WHU_test/*.png
+/Resultados_RALA-ChangeFormer/predictions/V6_LP_test/*.png
+/Resultados_RALA-ChangeFormer/predictions/V6_S2Looking_test/*.png
+/Resultados_RALA-ChangeFormer/predictions/V6_SYSU_test/*.png
+/Resultados_RALA-ChangeFormer/predictions/V6_WHU_test/*.png
+
+/Journal_Extension/CORRECCIONES.md

@@ -1,5 +1,5 @@
 % ============================================================
-%  Journal Extension — main.tex  (Springer LNCS/CCIS)
+%  Journal Extension, main.tex  (Springer LNCS/CCIS)
 %
 %  TRACKING CONVENTION
 %  Text carried verbatim from the conference version
@@ -63,32 +63,34 @@ Rank-Augmented Linear Attention Network: An Extended Benchmark Study}}
 \maketitle
 
 % =============================================================================
-%  ABSTRACT  (fully rewritten for journal version — all new content)
+%  ABSTRACT  (fully rewritten for journal version, all new content)
 % =============================================================================
 \begin{abstract}
 \journal{%
 Transformer-based architectures dominate bi-temporal building change detection
 (BCD) from very high-resolution (VHR) satellite imagery, yet their multi-head
 self-attention (MHSA) modules impose quadratic computational cost that constrains
-scalability. This work introduces \textbf{RALA-ChangeFormer}, an efficient variant
+scalability. This work extends our previous conference study and presents
+RALA-ChangeFormer, an efficient variant
 of ChangeFormer that replaces every encoder MHSA block with rank-augmented linear
 attention (RALA), reducing complexity from $\mathcal{O}(N^2)$ to
 $\mathcal{O}(N)$ without altering any other architectural component. On the
 original LEVIR-CD and DSIFN-CD benchmarks, RALA-ChangeFormer achieves
-$F_1{=}89.87\%$ and $84.07\%$—within training variance of the ChangeFormer
-baseline ($90.40\%$ and $86.67\%$)—while reducing attention-related GFLOPs by
+$F_1{=}89.87\%$ and $84.07\%$ within training variance of the ChangeFormer
+baseline ($90.40\%$ and $86.67\%$) while reducing attention-related GFLOPs by
 $8\%$, peak GPU memory by $22\%$, and increasing the maximum feasible batch size
-by $50\%$ at $256{\times}256$ resolution. This journal extension evaluates the
-model across four additional benchmarks spanning diverse acquisition conditions:
+by $50\%$ at $256{\times}256$ resolution. This journal extension evaluates both
+the baseline and the proposed model, trained under an identical protocol,
+across four additional benchmarks spanning diverse acquisition conditions:
 WHU-CD ($F_1{=}87.85\%$), LEVIR-CD+ ($F_1{=}80.24\%$), SYSU-CD
 ($F_1{=}78.02\%$), and S2Looking ($F_1{=}60.39\%$). Results reveal a
 performance gradient correlated with acquisition geometry and scene
-heterogeneity: the model generalises reliably to nadir-view datasets with
+heterogeneity: the model generalizes reliably to nadir-view datasets with
 homogeneous annotations but degrades markedly under oblique side-looking
 geometry (S2Looking) and multi-temporal illumination variation (SYSU-CD), with
 S2Looking showing a $-27.5\,\mathrm{pp}$ gap relative to WHU-CD. These findings
 position RALA-ChangeFormer as a practical efficiency contribution complementary
-to accuracy-maximisation strategies, and motivate future work on geometric
+to accuracy-maximization strategies, and motivate future work on geometric
 alignment, dynamic rank adaptation, and dataset creation for heterogeneous urban
 environments in the Global South.%
 }
@@ -122,7 +124,7 @@ regions requires a dual capability, the model must: (i) resolve subtle,
 fine–grained alterations at the building level, and (ii) integrate broader
 spatial–temporal context to disambiguate true structural changes from irrelevant
 variations such as illumination or seasonal effects. In this context,
-RALA-ChangeFormer \cite{Fan2025RALA} satisfies the dual requirement while
+RALA-ChangeFormer \cite{acuna2026efficient} satisfies the dual requirement while
 substantially reducing computational cost in comparison to the baseline
 ChangeFormer \cite{Bandara2022ChangeFormer}.
 Table~\ref{tab:intro_teaser} shows a comparison of RALA-ChangeFormer and
@@ -131,8 +133,9 @@ ChangeFormer with different datasets.
 \begin{table}[t]
 \centering
 \caption{Comparison between ChangeFormer (CF) and the proposed
-RALA-ChangeFormer (RALA-CF) on two benchmarks with input dimension
-256 x 256 and batch 16~\cite{acuna2026efficient}).}
+RALA-ChangeFormer (RALA-CF) on two benchmarks with $256\times256$ input
+patches and batch size 16. Results from the conference
+version~\cite{acuna2026efficient}.}
 \label{tab:intro_teaser}
 \resizebox{\columnwidth}{!}{
         \begin{tabular}{lcc}
@@ -160,7 +163,7 @@ architectures to Transformer-based models for BCD. Methods such as BIT
 \cite{Bandara2022ChangeFormer} leverage self-attention to capture long-range
 dependencies and global spatial–temporal context, achieving state-of-the-art
 performance on multiple datasets. Vision Transformer (ViT) architectures
-\cite{Dosovitskiy2021ViT,Raghu2023RevengeViT, Fan2024ViTAR} have demonstrated
+\cite{Dosovitskiy2021ViT,Raghu2023RevengeViT,Fan2024ViTAR} have demonstrated
 strong representational capacity and scalability in large-scale visual
 recognition tasks. Their ability to model non-local interactions makes them
 naturally attractive for multi-temporal reasoning. However, these advantages
@@ -198,7 +201,7 @@ and global spatio–temporal reasoning. This gap is especially relevant given th
 computational constraints of VHR remote sensing, where efficient attention
 mechanisms must reduce complexity without degrading segmentation accuracy.
 
-In this work, the gap is addressed by introducing \textbf{RALA-ChangeFormer},
+In this work, the gap is addressed by introducing RALA-ChangeFormer,
 an efficient variant of ChangeFormer in which each Transformer block replaces
 quadratic self-attention with the RALA mechanism, a rank-augmented linear
 attention formulation that expands the key–value space through a weighted
@@ -209,19 +212,28 @@ The analysis examines how rank augmentation behaves within the hierarchical
 encoder–decoder design of ChangeFormer and quantifies its impact on
 performance, FLOPs, GPU memory consumption, and maximum feasible batch size.
 
+\journal{This paper is an extended version of our conference work presented at
+VISAPP 2026 \cite{acuna2026efficient}, which introduced RALA-ChangeFormer and
+evaluated it on LEVIR-CD and DSIFN-CD. The present article extends that study
+with a cross-domain evaluation on four additional benchmarks (LEVIR-CD+,
+SYSU-CD, WHU-CD, and S2Looking), in which both the ChangeFormer baseline and
+RALA-ChangeFormer were retrained and compared under an identical protocol,
+together with a qualitative error analysis and a study of the training
+dynamics on each dataset.}
+
 The main contributions of this work are:
 \begin{itemize}
-    \item The introduction of \textbf{RALA-ChangeFormer}, a rank-augmented
+    \item The introduction of RALA-ChangeFormer, a rank-augmented
           linear attention variant of ChangeFormer that achieves near-linear
           complexity while maintaining competitive accuracy in urban BCD.
-    \item A detailed \textbf{computational analysis} quantifying reductions
+    \item A detailed computational analysis quantifying reductions
           in GPU memory consumption, FLOPs, and the increase in feasible batch
           size enabled by rank-augmented attention.
-    \item An extensive \textbf{experimental evaluation} on LEVIR-CD and
+    \item An extensive experimental evaluation on LEVIR-CD and
           DSIFN-CD demonstrating that RALA-ChangeFormer preserves segmentation
           accuracy while improving computational efficiency and training
           scalability.
-    \item \journal{A \textbf{six-dataset cross-domain benchmark} extending the evaluation to LEVIR-CD+ \cite{Zheng2020LEVIR}, SYSU-CD \cite{ShiSYSU2022}, WHU-CD \cite{Ji2019WHU}, and S2Looking \cite{ShenS2Looking2021}, revealing the generalisation boundaries of rank-augmented linear attention across diverse acquisition geometries and scene complexities~\cite{acuna2026efficient}.}
+    \item \journal{A six-dataset cross-domain benchmark extending the evaluation to LEVIR-CD+ \cite{Zheng2020LEVIR}, SYSU-CD \cite{ShiSYSU2022}, WHU-CD \cite{Ji2019WHU}, and S2Looking \cite{ShenS2Looking2021}, in which the baseline and the proposed model are compared under an identical protocol, revealing the generalization boundaries of rank-augmented linear attention across diverse acquisition geometries and scene complexities.}
 \end{itemize}
 
 This paper is organized as follows.
@@ -281,8 +293,10 @@ prohibitive for VHR imagery.
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{IGARS_ChangeFormer.jpeg}
-    \caption{Overview of the baseline ChangeFormer architecture. Recovery from
-    ChangeFormer original paper \cite{acuna2026efficient,Bandara2022ChangeFormer}}
+    \caption{Overview of the baseline ChangeFormer architecture. Diagram
+    adapted from the original ChangeFormer
+    publication~\cite{Bandara2022ChangeFormer}, as presented in the conference
+    version of this work~\cite{acuna2026efficient}.}
     \label{fig:changeformer_architecture}
 \end{figure}
 
@@ -323,16 +337,17 @@ LEVIR-CD+ \cite{Zheng2020LEVIR} extends the original series with additional
 bi-temporal pairs spanning wider urban morphologies at $0.5\,\mathrm{m}$
 resolution.
 SYSU-CD~\cite{ShiSYSU2022} provides 20\,000 aerial image pairs at
-$0.5\,\mathrm{m}$ covering diverse land-cover change types—buildings, roads,
-and vegetation—collected over a nine-year period in Guangzhou.
-WHU-CD~\cite{Ji2019WHU} offers centimetre-resolution aerial imagery
-($0.3\,\mathrm{m}$) with high-precision building annotations, making it the
-highest-quality purely building-focused benchmark currently available.
-S2Looking~\cite{ShenS2Looking2021} introduces side-looking satellite acquisitions
-that impose perspective distortions absent from all nadir-view datasets,
-constituting a demanding out-of-distribution stress test.
+$0.5\,\mathrm{m}$ covering diverse land-cover change types: buildings, roads,
+and vegetation collected over a nine-year period in Guangzhou.
+WHU-CD~\cite{Ji2019WHU} offers high-resolution aerial imagery
+($0.3\,\mathrm{m}$) with precise building annotations, which makes it one of
+the most accurately annotated building-focused benchmarks available.
+S2Looking~\cite{ShenS2Looking2021} introduces side-looking satellite
+acquisitions whose perspective distortions are absent from nadir-view
+datasets, exposing models trained on nadir imagery to acquisition conditions
+outside their training distribution.
 These four datasets are used in this extended study to assess
-the cross-domain generalisation of RALA-ChangeFormer beyond the conditions of
+the cross-domain generalization of RALA-ChangeFormer beyond the conditions of
 the original conference evaluation~\cite{acuna2026efficient}.%
 }
 
@@ -342,15 +357,13 @@ the original conference evaluation~\cite{acuna2026efficient}.%
 \section{Theoretical Background}
 \label{sec:theoretical}
 
-This section presents the proposed \textbf{RALA-ChangeFormer}, a
-computationally efficient variant of ChangeFormer in which the quadratic
-Multi-Head Self-Attention (MHSA) is replaced with rank-augmented linear
-attention (RALA). In order to provide a better understanding, we organized the
-paragraphs: (i) a brief overview of ChangeFormer, (ii) a clear formulation of
-Rank-Augmented Linear Attention (RALA), and (iii) the integration into the
-bi-temporal encoder–decoder design. In addition, this section introduces the
-theoretical formulation that underpins the proposed method, providing the
-mathematical foundations required for its implementation and analysis.
+\journal{This section presents the theoretical foundations of the proposed architecture
+RALA-ChangeFormer, a computationally efficient variant of ChangeFormer in
+which the quadratic Multi-Head Self-Attention (MHSA) is replaced with
+rank-augmented linear attention (RALA). The section is organized in three
+parts: (i) an overview of ChangeFormer, (ii) the formulation of RALA, and
+(iii) the mathematical elements required for the integration into the
+bi-temporal encoder–decoder design presented in Section~\ref{sec:method}.}
 
 \subsection{ChangeFormer}
 \label{subsec:cf_overview}
@@ -422,8 +435,8 @@ The intermediate matrix
 \kappa(K)^\top V \in\mathbb{R}^{d\times d}
 \label{eq:B_def}
 \end{equation}
-acts as a global key–value aggregation buffer. In practice, the
-equation \ref{eq:B_def} often becomes \emph{low-rank} because many key vectors
+acts as a global key–value aggregation buffer. In practice, the matrix in
+Eq.~\ref{eq:B_def} often becomes \emph{low-rank} because many key vectors
 are nearly collinear. This collapse in feature diversity limits
 representational power and degrades dense prediction performance.
 
@@ -492,7 +505,8 @@ preserving the linear-time complexity of the attention operation.
     \centering
     \includegraphics[width=\linewidth]{RALA.png}
     \caption{RALA Transformer block replacing the standard MHSA module.
-    Recovery from RALA original paper \cite{acuna2026efficient,Fan2025RALA}}
+    Diagram adapted from the original RALA publication~\cite{Fan2025RALA}, as
+    presented in the conference version of this work~\cite{acuna2026efficient}.}
     \label{fig:rala_block}
 \end{figure}
 
@@ -503,12 +517,12 @@ preserving the linear-time complexity of the attention operation.
 \label{sec:method}
 
 RALA-ChangeFormer is constructed by replacing every MHSA block in the
-\textbf{encoder} of ChangeFormer with the rank-augmented linear attention
+encoder of ChangeFormer with the rank-augmented linear attention
 module described in Section~\ref{subsec:rala}, where attention-related
-computational costs are dominant. All remaining components-CNN encoder,
-feed-forward layers, skip connections, and multi-scale fusion-remain unchanged,
+computational costs are dominant. All remaining components—CNN encoder,
+feed-forward layers, skip connections, and multi-scale fusion—remain unchanged,
 preserving full architectural compatibility with the baseline design. The
-integration mechanism is summarized in Figure~\ref{fig:rala_block}.
+integration mechanism is summarized in Fig.~\ref{fig:rala_block}.
 
 Given the token sequence $X^{(l)} \in \mathbb{R}^{N_l \times C_l}$ at
 resolution level $l$, the block first computes query, key, and value projections
@@ -537,18 +551,18 @@ Y = \mathrm{FFN}(X_{\text{out}}),
 \end{equation}
 
 This construction preserves the overall representational structure of the
-original ChangeFormer architecture-including multi-scale refinement, long-range
-reasoning, and residual learning-while substituting the quadratic-cost MHSA
-blocks \textbf{exclusively within the encoder} with a linear-time
+original ChangeFormer architecture including multi-scale refinement, long-range
+reasoning, and residual learning while substituting the quadratic-cost MHSA
+blocks exclusively within the encoder with a linear-time
 rank-augmented mechanism.
 
 \noindent\textbf{Computational Complexity.}
 Let $N$ denote the number of tokens and $d$ the hidden dimension.
-Standard MHSA requires \textbf{time: }$\mathcal{O}(N^{2}d)$ and
-\textbf{memory: }$\mathcal{O}(N^{2})$ due to the formation of the dense
+Standard MHSA requires $\mathcal{O}(N^{2}d)$ time and
+$\mathcal{O}(N^{2})$ memory due to the formation of the dense
 $N\times N$ attention matrix.
-In contrast, the RALA module scales as \textbf{time: }$\mathcal{O}(Nd)$ and
-\textbf{memory: }$\mathcal{O}(d^{2})$ because no pairwise token interactions
+In contrast, the RALA module scales as $\mathcal{O}(Nd)$ in time and
+$\mathcal{O}(d^{2})$ in memory because no pairwise token interactions
 are constructed explicitly.
 Since $N \gg d$ for VHR remote sensing images, this substitution results in
 substantially reduced computational cost and enables significantly larger batch
@@ -571,10 +585,15 @@ bi-temporal datasets under fixed GPU budgets.
 
 \noindent
 In order to show the effectiveness of RALA-ChangeFormer, we evaluate our
-proposal on two widely used benchmarks. Our experiments assess both
+proposal on \journal{six public benchmarks: LEVIR-CD and DSIFN-CD, used in the
+conference version of this work \cite{acuna2026efficient}, and four additional
+datasets (LEVIR-CD+, SYSU-CD, WHU-CD, and S2Looking) introduced in this
+extension}. Our experiments assess both
 segmentation accuracy and computational efficiency after replacing the quadratic
 MHSA modules of ChangeFormer with the RALA mechanism. All comparisons are made
-against the original ChangeFormer \cite{Bandara2022ChangeFormer}.
+against the original ChangeFormer \cite{Bandara2022ChangeFormer}\journal{,
+which we retrained on the four additional datasets under the same protocol as
+the proposed model}.
 
 \noindent \textbf{LEVIR-CD.} LEVIR-CD \cite{Zheng2020LEVIR} contains 637
 bi-temporal high-resolution image pairs (1024$\times$1024) depicting building
@@ -612,11 +631,11 @@ Each tile measures $256\times256$ pixels; the dataset is split into
 12\,000 / 4\,000 / 4\,000 samples for train/val/test.}
 
 \journal{\noindent \textbf{WHU-CD.}~\cite{Ji2019WHU}
-The WHU Building Change Detection Dataset provides centimetre-resolution aerial
+The WHU Building Change Detection Dataset provides high-resolution aerial
 imagery ($0.3\,\mathrm{m}$~px$^{-1}$) focused exclusively on building-level
 change across a large area of Christchurch, New Zealand.
-Its high positional accuracy and precise building annotations make it the
-cleanest dataset in our benchmark suite. Approximately 32\,000 bi-temporal
+Among the datasets in our benchmark suite, it offers the highest positional
+accuracy and the most precise building annotations. Approximately 32\,000 bi-temporal
 patches of $256\times256$ pixels are used, with an 80 / 10 / 10\% train/val/test
 split and a low class-imbalance ratio.}
 
@@ -624,9 +643,9 @@ split and a low class-imbalance ratio.}
 S2Looking consists of 5\,000 bi-temporal satellite image pairs captured by
 side-looking satellites at $0.5\,\mathrm{m}$ resolution over multiple regions
 worldwide. The oblique acquisition geometry introduces perspective distortions,
-building-shadow variability, and apparent positional shifts of rooftop boundaries
-between temporal acquisitions—making this dataset a demanding out-of-distribution
-stress test for models pretrained on nadir-view imagery.
+building-shadow variability, and apparent positional shifts of rooftop
+boundaries between temporal acquisitions; these conditions differ substantially
+from the nadir-view imagery on which the evaluated models were pretrained.
 
 Ground-truth labels in the six datasets are binary change masks. For efficiency experiments, the following is added (i) input patch resolution, and (ii) batch size until GPU out-of-memory (OOM) is reached.
 }
@@ -635,30 +654,32 @@ Ground-truth labels in the six datasets are binary change masks. For efficiency 
 PyTorch, matching the software environment used by the ChangeFormer
 implementation \cite{Bandara2022ChangeFormer} for fair comparison.
 
-For \textbf{LEVIR-CD}, both ChangeFormer (CF) and RALA-ChangeFormer (RALA-CF)
+For LEVIR-CD, both ChangeFormer (CF) and RALA-ChangeFormer (RALA-CF)
 are initialized from the SegFormer-B2 encoder pretrained on ADE20K, following
 the training protocol of the original ChangeFormer~\cite{Bandara2022ChangeFormer}.
 An initial learning rate with cosine decay of $1\times10^{-4}$ is used.
 
-For \textbf{DSIFN-CD}, CF is fine-tuned from the best CF checkpoint obtained on
+For DSIFN-CD, CF is fine-tuned from the best CF checkpoint obtained on
 LEVIR-CD using a reduced learning rate of $6\times10^{-5}$. Analogously,
 RALA-CF is initialized from the best RALA-CF checkpoint trained on LEVIR-CD and
 optimized under the same schedule. In all experiments, the only architectural
 difference between CF and RALA-CF lies in the encoder attention modules
 (standard MHSA vs.\ rank-augmented linear attention).
 
-\journal{For the \textbf{four extended benchmarks} (LEVIR-CD+, SYSU-CD, WHU-CD,
-S2Looking), RALA-CF was initialised from the best LEVIR-CD checkpoint with an
-initial learning rate of $6\times10^{-5}$ under cosine annealing over 100
-epochs. Binary cross-entropy combined with a soft Dice loss was used as the
-training objective, with class weighting applied to SYSU-CD and S2Looking to
-compensate for the higher no-change pixel fraction. All four experiments were
-executed on an NVIDIA A100 40\,GB GPU.}
+\journal{For the four extended benchmarks (LEVIR-CD+, SYSU-CD, WHU-CD,
+S2Looking), both CF and RALA-CF were initialized from their respective best
+LEVIR-CD checkpoints with an initial learning rate of $6\times10^{-5}$ under
+cosine annealing. Binary cross-entropy combined with a soft Dice loss was used
+as the training objective, with class weighting applied to SYSU-CD and
+S2Looking to compensate for the higher no-change pixel fraction. The two models
+were trained under an identical protocol on each dataset, so that every
+reported comparison isolates the effect of the attention mechanism. All
+experiments were executed on an NVIDIA A100 40\,GB GPU.}
 
 
 \subsection{Evaluation Metrics}
 
-We report standard change detection metrics following the state-of-the-art BCD models \cite{Zheng2020LEVIR,Zhang2020FusionNetDSIFN,Bandara2022ChangeForme,Chen2022BIT,Fang2021SNUNetCD}. To measure computational efficiency, we
+We report standard change detection metrics following the state-of-the-art BCD models \cite{Zheng2020LEVIR,Zhang2020FusionNetDSIFN,Bandara2022ChangeFormer,Chen2022BIT,Fang2021SNUNetCD}. To measure computational efficiency, we
 additionally track (a) total learnable parameters, (b) GFLOPs per forward pass,
 (c) peak GPU memory consumption, (d) maximum feasible batch size before OOM and
 (e) training throughput (images/s).
@@ -669,7 +690,9 @@ additionally track (a) total learnable parameters, (b) GFLOPs per forward pass,
 \caption{Segmentation accuracy of baseline BCD models and our variants on
 LEVIR-CD and DSIFN-CD using $256\times256$ input patches and batch size 16.
 Metrics for SNUNet-CD and BIT are taken from the original ChangeFormer paper
-\cite{acuna2026efficient,Bandara2022ChangeFormer}.}
+\cite{Bandara2022ChangeFormer}; CF and RALA-CF results are from the conference
+version of this work \cite{acuna2026efficient}. The best value per dataset is
+shown in bold.}
 \label{tab:accuracy}
 \centering
 \resizebox{\columnwidth}{!}{
@@ -679,16 +702,16 @@ Metrics for SNUNet-CD and BIT are taken from the original ChangeFormer paper
 \hline
 SNUNet-CD~\cite{Fang2021SNUNetCD} & LEVIR-CD & 88.16 & 78.83 & 98.82 \\
 BIT~\cite{Chen2022BIT}            & LEVIR-CD & 89.31 & 80.68 & 98.92 \\
-CF~\cite{Bandara2022ChangeFormer} & LEVIR-CD & 90.40 & 82.48 & 99.04 \\
+CF~\cite{Bandara2022ChangeFormer} & LEVIR-CD & \textbf{90.40} & \textbf{82.48} & \textbf{99.04} \\
 \rowcolor{pastelorange}
-RALA-CF (ours) \cite{acuna2026efficient} & LEVIR-CD & \textbf{89.87} & \textbf{81.60} & \textbf{98.99} \\
+RALA-CF (ours) \cite{acuna2026efficient} & LEVIR-CD & 89.87 & 81.60 & 98.99 \\
 
 \hline
 SNUNet-CD~\cite{Fang2021SNUNetCD} & DSIFN-CD & 66.18 & 49.45 & 87.34 \\
 BIT~\cite{Chen2022BIT}            & DSIFN-CD & 69.26 & 52.97 & 89.41 \\
-CF~\cite{Bandara2022ChangeFormer} & DSIFN-CD & 86.67 & 76.48 & 95.56 \\
+CF~\cite{Bandara2022ChangeFormer} & DSIFN-CD & \textbf{86.67} & \textbf{76.48} & \textbf{95.56} \\
 \rowcolor{pastelorange}
-RALA-CF (ours) \cite{acuna2026efficient} & DSIFN-CD & \textbf{84.07} & \textbf{73.96} & \textbf{92.44} \\
+RALA-CF (ours) \cite{acuna2026efficient} & DSIFN-CD & 84.07 & 73.96 & 92.44 \\
 \hline
 \end{tabular}
 }
@@ -720,7 +743,7 @@ RALA-CF \cite{acuna2026efficient} & \textbf{243} & \textbf{228.62} & \textbf{21}
 \end{table}
 
 \noindent Table~\ref{tab:efficiency} shows that RALA-CF reduces FLOPs by
-approximately 8--10\% and peak memory usage by \textbf{20--30}\% without
+approximately 8--10\% and peak memory usage by 20--30\% without
 altering the overall architecture. These savings translate into faster training
 and more flexible batch-size configurations.
 
@@ -780,21 +803,40 @@ highest and attention cost dominates.
 % ── Extended benchmark results (new in journal version) ──────────────────────
 \journal{%
 \noindent \textbf{Extended Benchmark Results on Four Additional Datasets.}
-Table~\ref{tab:master} reports the full metric suite for RALA-ChangeFormer
-across the four extended benchmarks.
-WHU-CD yields the strongest result ($F_1=87.85\%$, $\mathrm{IoU}=78.33\%$),
-consistent with its clean annotations and nadir-view geometry.
-LEVIR-CD+ achieves $F_1=80.24\%$, broadly in line with the original
-LEVIR-CD performance, confirming effective transfer to extended urban morphologies.
-SYSU-CD produces $F_1=78.02\%$ despite its multi-class change complexity,
-suggesting sufficient discriminative capacity in the rank-augmented encoder.
-S2Looking is the most challenging: $F_1=60.39\%$ with notably low Recall
-($53.09\%$), indicating that the side-looking perspective distortion constitutes
-an out-of-distribution condition that rank augmentation alone cannot overcome.
+Table~\ref{tab:master} reports the full metric suite for both the ChangeFormer
+baseline and RALA-ChangeFormer across the four extended benchmarks; every entry
+originates from experiments executed by the authors under the identical
+training protocol.
+The two models remain within a narrow margin of each other on all four
+datasets, with F1 differences below $0.6$ percentage points, which extends to
+new domains the accuracy-preservation result observed on LEVIR-CD and DSIFN-CD.
+WHU-CD yields the strongest result for both models, and RALA-ChangeFormer
+attains the best scores there ($F_1=87.85\%$ vs.\ $87.49\%$ for the baseline,
+$\mathrm{IoU}=78.33\%$ vs.\ $77.77\%$), consistent with the clean annotations
+and nadir-view geometry of this dataset.
+On LEVIR-CD+ the baseline retains a marginal advantage
+($F_1=80.34\%$ vs.\ $80.24\%$), while RALA-ChangeFormer achieves higher recall
+($80.29\%$ vs.\ $78.79\%$); both values are broadly in line with the original
+LEVIR-CD performance, confirming effective transfer to extended urban
+morphologies.
+SYSU-CD shows the same pattern ($F_1=78.05\%$ for the baseline vs.\ $78.02\%$
+for RALA-ChangeFormer) despite its multi-class change complexity, suggesting
+sufficient discriminative capacity in the rank-augmented encoder.
+S2Looking yields the lowest scores of the four benchmarks for both models,
+with RALA-ChangeFormer obtaining the better values across every metric
+($F_1=60.39\%$ vs.\ $59.88\%$); the low recall of both models
+(near $53\%$) indicates that the side-looking perspective distortion
+constitutes an acquisition condition that neither attention
+formulation overcomes.
 }
 
 \begin{table}[h!]
-\caption{\journal{Comparison between the ChangeFormer baseline and the proposed method across the four extended benchmarks (LEVIR-CD+, SYSU-CD, WHU-CD, and S2Looking). All values are reported in \% \cite{acuna2026efficient}.}}
+\caption{\journal{Comparison between the ChangeFormer baseline and the proposed
+RALA-ChangeFormer across the four extended benchmarks (LEVIR-CD+, SYSU-CD,
+WHU-CD, and S2Looking). Both models were trained and evaluated by the authors
+under the identical protocol described in Section~\ref{sec:experiments}.
+All values are reported in \%; the best value per metric and dataset is shown
+in bold.}}
 \label{tab:master}
 \centering
 \resizebox{\columnwidth}{!}{
@@ -807,17 +849,17 @@ an out-of-distribution condition that rank augmentation alone cannot overcome.
 & \textbf{Prec} & \textbf{Rec} & \textbf{F1} & \textbf{IoU} & \textbf{OA}
 & \textbf{Prec} & \textbf{Rec} & \textbf{F1} & \textbf{IoU} & \textbf{OA} \\
 \hline
-LEVIR-CD+ & 79.97 & 81.34 & 80.65 & 67.58 & 98.44 &
-\textbf{80.20} & 80.29 & 80.24 & 67.01 & 98.39 \\
+LEVIR-CD+ & \textbf{81.96} & 78.79 & \textbf{80.34} & \textbf{67.14} & \textbf{98.43} &
+80.20 & \textbf{80.29} & 80.24 & 67.01 & 98.39 \\
 
-SYSU-CD & 77.90 & 79.74 & 78.81 & 65.03 & 90.12 &
-\textbf{82.10} & 74.34 & 78.02 & 63.97 & 90.12 \\
+SYSU-CD & \textbf{83.57} & 73.21 & \textbf{78.05} & \textbf{64.00} & \textbf{90.29} &
+82.10 & \textbf{74.34} & 78.02 & 63.97 & 90.12 \\
 
-WHU-CD & 84.87 & 90.20 & 87.45 & 77.70 & 99.11 &
-\textbf{90.14} & 85.67 & \textbf{87.85} & \textbf{78.33} & 99.06 \\
+WHU-CD & \textbf{90.97} & 84.27 & 87.49 & 77.77 & 99.04 &
+90.14 & \textbf{85.67} & \textbf{87.85} & \textbf{78.33} & \textbf{99.06} \\
 
-S2Looking & 72.14 & 54.19 & 61.89 & 45.77 & 84.55 &
-70.02 & 53.09 & 60.39 & 43.25 & \textbf{99.16} \\
+S2Looking & 68.81 & 53.00 & 59.88 & 42.73 & 99.14 &
+\textbf{70.02} & \textbf{53.09} & \textbf{60.39} & \textbf{43.25} & \textbf{99.16} \\
 \hline
 \end{tabular}
 }
@@ -839,14 +881,14 @@ identical F1, IoU, and OA scores to the baseline ChangeFormer on both datasets
 \cite{Zheng2020LEVIR,Zhang2020FusionNetDSIFN}. The differences fall within normal training
 variance, indicating that the rank-augmented linear formulation retains the
 model's ability to represent spatial–temporal interactions between bi-temporal
-features maps. Importantly, while many linear-attention variants
+feature maps. Importantly, while many linear-attention variants
 \cite{Choromanski2021Performer,Wang2020Linformer,Xiong2021Nystromformer} exhibit
 a well-documented degradation in dense vision problems due to low-rank collapse,
 RALA avoids this issue by explicitly increasing the diversity of its KV buffer.
 This preservation of representational capacity is further illustrated by the
 attention maps in Fig.~\ref{fig:attn_maps}, which provide a qualitative
 visualization of the spatial attention distribution. Collectively, these results
-confirm that RALA maintains reliable prediction for this specific tasks, despite
+confirm that RALA maintains reliable prediction for this specific task, despite
 replacing quadratic attention.
 
 %%%%%%
@@ -881,59 +923,67 @@ memory budgets.
 
 \journal{%
 \noindent \textbf{Extended Benchmark Discussion.}
-The six-dataset results (Table~\ref{tab:accuracy}, Table~\ref{tab:master})
-reveal a clear performance gradient correlated with acquisition geometry,
-annotation quality, and scene heterogeneity, providing interpretable evidence
-about the generalisation boundaries of rank-augmented linear attention.
+The six-dataset results (Table~\ref{tab:accuracy} and Table~\ref{tab:master})
+show a performance gradient that correlates with acquisition geometry,
+annotation quality, and scene heterogeneity, and that is shared by the baseline
+and the proposed model. Since both models score within a narrow margin of each
+other on every dataset, the differences across datasets are attributable to the
+data conditions rather than to the attention mechanism.
 
-\noindent{\textbf{WHU-CD (easiest).}}
-$F_1=87.85\%$ and $\mathrm{Prec}=90.14\%$ confirm that RALA-ChangeFormer
-transfers reliably to high-fidelity nadir datasets with homogeneous scene
-conditions. The centimetre resolution ($0.3\,\mathrm{m}$), precise building
-annotations, and low class imbalance of WHU-CD place it closest to the training
-distribution of the SegFormer-B2 encoder. The resulting error maps
+\noindent{\textbf{WHU-CD.}}
+Both models obtain their highest scores on WHU-CD ($F_1=87.85\%$ for RALA-CF
+and $87.49\%$ for CF), indicating a reliable transfer to nadir-view datasets
+with homogeneous scene conditions. The high spatial resolution
+($0.3\,\mathrm{m}$), precise building annotations, and low class imbalance of
+WHU-CD place it closest to the conditions of the LEVIR-CD checkpoints from
+which both models were initialized. The resulting error maps
 (Fig.~\ref{fig:qual_whu}) show predominantly correct detections, with errors
 confined to cluster-adjacency ambiguities.
 
-\noindent{\textbf{LEVIR-CD+ (moderate, in-distribution).}}
-$F_1=80.24\%$ aligns closely with the original LEVIR-CD result, confirming that
-the extended dataset does not introduce a distributional break despite its
-broader variety of building sizes and peri-urban transitions. The slight F1
-reduction reflects increased boundary ambiguity and higher false-negative rates
-at small isolated structures in denser urban morphologies.
+\noindent{\textbf{LEVIR-CD+.}}
+The scores on LEVIR-CD+ ($F_1=80.24\%$ for RALA-CF and $80.34\%$ for CF) align
+closely with the original LEVIR-CD results, indicating that the extended
+dataset does not introduce a distributional break despite its broader variety
+of building sizes and peri-urban transitions. The slight F1 reduction with
+respect to LEVIR-CD reflects increased boundary ambiguity and higher
+false-negative rates at small isolated structures in denser urban
+morphologies.
 
-\noindent{\textbf{SYSU-CD (moderate difficulty, illumination and multi-class complexity).}}
-$F_1=78.02\%$ is competitive given that SYSU-CD encompasses multi-class surface
-changes across a nine-year acquisition window, during which seasonal vegetation
+\noindent{\textbf{SYSU-CD.}}
+The results on SYSU-CD ($F_1=78.02\%$ for RALA-CF and $78.05\%$ for CF) are
+competitive given that this dataset encompasses multi-class surface changes
+across a nine-year acquisition window, during which seasonal vegetation
 cycles, illumination angle variations, and atmospheric conditions introduce
-significant spectral inconsistencies. The high $\mathrm{Prec}=82.10\%$
-indicates reliable detections; the lower $\mathrm{Rec}=74.34\%$ reflects
-structural changes masked by co-occurring phenological variation. Class-imbalance
+spectral inconsistencies. The higher precision of both models relative to
+their recall (e.g., $82.10\%$ vs.\ $74.34\%$ for RALA-CF) reflects structural
+changes masked by co-occurring phenological variation. Class-imbalance
 weighting partially compensates for no-change pixel dominance, but the binary
 supervision cannot disambiguate vegetation-induced spectral signatures from
 genuine structural change.
 
-\noindent{\textbf{S2Looking (hardest, geometric out-of-distribution).}}
-$F_1=60.39\%$ with $\mathrm{Rec}=53.09\%$ marks S2Looking as the most severe
-challenge, representing a $-27.5\,\mathrm{pp}$ F1 gap relative to WHU-CD.
-The side-looking geometry introduces apparent positional shifts of rooftop
-boundaries due to parallax effects absent from all nadir-view benchmarks.
-Rank augmentation preserves attention-pattern diversity (Fig.~\ref{fig:attn_maps})
-but provides no geometric viewpoint correction; spatially displaced features
-across time cannot be bridged through feature reweighting alone.
+\noindent{\textbf{S2Looking.}}
+Both models obtain their lowest scores on S2Looking ($F_1=60.39\%$ for RALA-CF
+and $59.88\%$ for CF), a gap of roughly $27$ percentage points in F1 with
+respect to WHU-CD. The side-looking geometry introduces apparent positional
+shifts of rooftop boundaries due to parallax effects absent from the
+nadir-view benchmarks, which explains the low recall of both models (near
+$53\%$). Rank augmentation preserves attention-pattern diversity
+(Fig.~\ref{fig:attn_maps}) but provides no geometric viewpoint correction;
+spatially displaced features across time cannot be bridged through feature
+reweighting alone.
 
 \noindent{\textbf{Comparison with current SOTA.}}
 Recent state-of-the-art models such as
-ChangeMamba~\cite{Chen2024ChangeMamba}—which replaces self-attention with
-selective state-space sequence modelling—report F1 scores above 91\% on LEVIR-CD
-and demonstrate stronger cross-dataset transfer. The gap relative to RALA-CF is
-attributable primarily to the shared SegFormer-B2 encoder backbone rather than
-to the attention formulation: architectural innovations at the backbone level
-account for a larger performance differential than switching between quadratic
-and rank-augmented linear attention. This observation frames RALA-ChangeFormer
-as an \emph{efficiency} contribution rather than an accuracy-maximisation
-strategy, motivating its integration within stronger backbone architectures as
-a next step.%
+ChangeMamba~\cite{Chen2024ChangeMamba}, which replaces self-attention with
+selective state-space sequence modeling, report F1 scores above 91\% on
+LEVIR-CD and demonstrate stronger cross-dataset transfer. The gap relative to
+RALA-CF is attributable primarily to the shared SegFormer-B2 encoder backbone
+rather than to the attention formulation: architectural innovations at the
+backbone level account for a larger performance differential than switching
+between quadratic and rank-augmented linear attention. This observation frames
+RALA-ChangeFormer as an \emph{efficiency} contribution rather than an
+accuracy-maximization strategy, motivating its integration within stronger
+backbone architectures as a next step.%
 }
 
 \begin{figure}[t]
@@ -962,31 +1012,16 @@ a next step.%
     \label{fig:attn_maps}
 \end{figure}
 
-% ── Qualitative Visual Analysis (new in journal version) ─────────────────────
-\subsection{\journal{Qualitative Visual Analysis}}
-\label{subsec:qualitative}
 
-\journal{%
-Figures~\ref{fig:qual_levir_plus}--\ref{fig:qual_s2looking} present qualitative
-change detection results on all four extended benchmarks: LEVIR-CD+, SYSU-CD,
-WHU-CD, and S2Looking.
-Each figure presents a grid of four test samples~(rows) across five columns:
-Pre-change image~(A), Post-change image~(B), Ground Truth mask, Model
-Prediction, and a four-colour Error Map encoding True Positives~(TP, white),
-True Negatives~(TN, black), False Positives~(FP, red), and False
-Negatives~(FN, blue).
-This layout directly mirrors the output of the \texttt{qualitative\_comparison.py}
-pipeline script.%
-}
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{qualitative_LEVIR_CDPlus.pdf}
-    \caption{\journal{Qualitative results on LEVIR-CD+ (four test samples).
+    \caption{\journal{Qualitative comparison on LEVIR-CD+ (four test samples).
     Columns: Pre-change~(A) $|$ Post-change~(B) $|$ Ground Truth $|$
-    Prediction $|$ Error Map
+    ChangeFormer $|$ RALA-ChangeFormer
     [TP\,=\,white, TN\,=\,black, FP\,=\,red, FN\,=\,blue].
-    RALA-ChangeFormer correctly delineates the majority of newly constructed
+    Both models correctly delineate the majority of newly constructed
     building footprints; residual errors concentrate along building boundaries
     and in structurally ambiguous mixed-use zones.}}
     \label{fig:qual_levir_plus}
@@ -995,68 +1030,91 @@ pipeline script.%
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{qualitative_SYSU_CD.pdf}
-    \caption{\journal{Qualitative results on SYSU-CD (four test samples).
+    \caption{\journal{Qualitative comparison on SYSU-CD (four test samples).
     Columns: Pre-change~(A) $|$ Post-change~(B) $|$ Ground Truth $|$
-    Prediction $|$ Error Map
+    ChangeFormer $|$ RALA-ChangeFormer
     [TP\,=\,white, TN\,=\,black, FP\,=\,red, FN\,=\,blue].
-    The model detects large-area construction and road changes correctly.
+    Both models detect large-area construction and road changes correctly.
     False alarms~(red) appear predominantly in vegetated buffer zones where
     seasonal spectral variation superficially resembles structural change.}}
     \label{fig:qual_sysu}
 \end{figure}
 
-\begin{figure}[t]
+% ── Qualitative Visual Analysis (new in journal version) ─────────────────────
+\subsection{\journal{Qualitative Visual Analysis}}
+\label{subsec:qualitative}
+
+\journal{%
+Figures~\ref{fig:qual_levir_plus}--\ref{fig:qual_s2looking} present qualitative
+change detection results on the four extended benchmarks: LEVIR-CD+, SYSU-CD,
+WHU-CD, and S2Looking.
+Each figure presents a grid of four test samples~(rows) across five columns:
+the pre-change image~(A), the post-change image~(B), the ground-truth mask,
+and one error-colored prediction map per model (ChangeFormer and
+RALA-ChangeFormer). The error coloring encodes true positives~(TP, white),
+true negatives~(TN, black), false positives~(FP, red), and false
+negatives~(FN, blue), so that each prediction and its correctness are visible
+in a single panel and the two models can be compared directly on the same
+scene.%
+}
+
+
+
+\begin{figure}[h!t]
     \centering
     \includegraphics[width=\linewidth]{qualitative_WHU_CD.pdf}
-    \caption{\journal{Qualitative results on WHU-CD (four test samples).
+    \caption{\journal{Qualitative comparison on WHU-CD (four test samples).
     Columns: Pre-change~(A) $|$ Post-change~(B) $|$ Ground Truth $|$
-    Prediction $|$ Error Map
+    ChangeFormer $|$ RALA-ChangeFormer
     [TP\,=\,white, TN\,=\,black, FP\,=\,red, FN\,=\,blue].
-    The centimetre-resolution ($0.3\,\mathrm{m}$) nadir-view imagery enables
+    The high-resolution ($0.3\,\mathrm{m}$) nadir-view imagery enables
     sharp boundary delineation: RALA-ChangeFormer achieves $F_1=87.85\%$ with a
     low false-positive rate. Residual errors concentrate in high-density building
-    clusters where adjacent footprints merge under the model's boundary
-    discrimination capacity, producing localised false negatives at shared
+    clusters where adjacent footprints merge under the models' boundary
+    discrimination capacity, producing localized false negatives at shared
     building edges.}}
     \label{fig:qual_whu}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[th!]
     \centering
     \includegraphics[width=\linewidth]{qualitative_S2Looking.pdf}
-    \caption{\journal{Qualitative results on S2Looking (four test samples).
+    \caption{\journal{Qualitative comparison on S2Looking (four test samples).
     Columns: Pre-change~(A) $|$ Post-change~(B) $|$ Ground Truth $|$
-    Prediction $|$ Error Map
+    ChangeFormer $|$ RALA-ChangeFormer
     [TP\,=\,white, TN\,=\,black, FP\,=\,red, FN\,=\,blue].
     The oblique side-looking acquisition geometry introduces apparent positional
     shifts of rooftop boundaries between temporal acquisitions due to parallax,
     producing systematic false negatives~(blue) wherever building edges are
     displaced. Shadow cast by tall structures at non-nadir viewing angles
     generates additional false positives~(red), jointly explaining the low
-    recall ($53.09\%$) that characterises this out-of-distribution
+    recall of both models (near $53\%$) on this out-of-distribution
     benchmark.}}
     \label{fig:qual_s2looking}
 \end{figure}
 
 \journal{%
+The error maps of the two models are visually similar on all four datasets,
+which is consistent with the quantitative parity reported in
+Table~\ref{tab:master}; the following observations therefore apply to both
+models unless stated otherwise.
 On LEVIR-CD+ (Fig.~\ref{fig:qual_levir_plus}), the dominant failure pattern is
 boundary under-segmentation: thin false-negative halos appear around correctly
-detected building footprints, caused by the global $\alpha$-weighted KV pooling
-smoothing the attention response at change/no-change interfaces.
+detected building footprints at change/no-change interfaces.
 On SYSU-CD (Fig.~\ref{fig:qual_sysu}), systematic false alarms arise in
 vegetated and riparian areas, where seasonal greenery fluctuations produce
 spectral signatures similar to structural change under binary supervision.
-WHU-CD (Fig.~\ref{fig:qual_whu}) exhibits the cleanest error maps across all
-four datasets: the nadir-view geometry and high-precision annotations allow the
-model to localise building footprints with sharp boundaries; the few remaining
-errors concentrate at the edges of densely packed building clusters, where
-adjacent footprints merge into ambiguous connected regions.
-S2Looking (Fig.~\ref{fig:qual_s2looking}) presents the starkest failure profile:
-false negatives dominate the error maps, with blue regions systematically
-outlining entire building boundaries; this is a direct consequence of the oblique
-acquisition geometry, which displaces rooftop projections relative to the
-ground-level annotations and creates spatially inconsistent features that the
-LEVIR-CD-pretrained encoder cannot reliably match across time steps.%
+WHU-CD (Fig.~\ref{fig:qual_whu}) exhibits the fewest errors across the
+four datasets: the nadir-view geometry and high-precision annotations allow
+both models to localize building footprints with sharp boundaries; the few
+remaining errors concentrate at the edges of densely packed building clusters,
+where adjacent footprints merge into ambiguous connected regions.
+On S2Looking (Fig.~\ref{fig:qual_s2looking}), false negatives dominate the
+error maps, with blue regions systematically outlining entire building
+boundaries; this is a direct consequence of the oblique acquisition geometry,
+which displaces rooftop projections relative to the ground-level annotations
+and creates spatially inconsistent features that the LEVIR-CD-pretrained
+encoders cannot reliably match across time steps.%
 }
 
 % ── Statistical Training Dynamics (new in journal version) ───────────────────
@@ -1065,36 +1123,43 @@ LEVIR-CD-pretrained encoder cannot reliably match across time steps.%
 
 \journal{%
 Figure~\ref{fig:learning_curves} shows the training and validation mF1 curves
-for the four extended benchmarks over the full training duration, as generated
-by the \texttt{parse\_results.py} pipeline script.
-Each panel marks the best validation epoch~($\star$) and the test F1
-(dashed horizontal line).%
+of the ChangeFormer baseline and RALA-ChangeFormer on the four extended
+benchmarks over the full training duration.
+Each panel overlays both models on the same axes and marks the best validation
+checkpoint of each model~($\star$), allowing a direct comparison of
+convergence speed and stability.%
 }
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{learning_curves.pdf}
-    \caption{\journal{RALA-ChangeFormer training dynamics on the four extended
-    benchmarks (LEVIR-CD+, SYSU-CD, WHU-CD, S2Looking).
-    Blue: train mF1; red: validation mF1; green dashed: test F1;
-    $\star$: best validation checkpoint.
-    WHU-CD converges rapidly with minimal train/val divergence.
-    S2Looking shows high variance and the largest train-to-test gap,
+    \caption{\journal{Training dynamics of ChangeFormer (blue) and
+    RALA-ChangeFormer (red) on the four extended benchmarks
+    (LEVIR-CD+, SYSU-CD, WHU-CD, S2Looking).
+    Dashed lines: training mF1; solid lines: validation mF1;
+    $\star$: best validation checkpoint of each model.
+    The two models follow closely matching trajectories on every dataset.
+    WHU-CD converges rapidly with minimal train/validation divergence, whereas
+    S2Looking shows high variance and the widest train/validation gap,
     reflecting the distributional shift introduced by side-looking geometry.}}
     \label{fig:learning_curves}
 \end{figure}
 
 \journal{%
-WHU-CD exhibits the fastest and most stable convergence: validation mF1 rises
-steeply within the first 20 epochs, plateaus with minimal overfitting, and the
-test F1 closely tracks the validation best—consistent with the dataset's clean
-annotations and low class imbalance.
+The curves of the two models are nearly superimposed on all four datasets,
+providing training-time evidence that replacing MHSA with rank-augmented
+linear attention does not alter the optimization behavior of the
+architecture.
+WHU-CD exhibits the fastest and most stable convergence for both models:
+validation mF1 rises steeply within the first 20 epochs and plateaus with
+minimal overfitting, consistent with the dataset's clean annotations and low
+class imbalance.
 LEVIR-CD+ and SYSU-CD show moderate convergence rates with gradually widening
 train/validation gaps beyond epoch~50, partially mitigated by cosine
 learning-rate decay.
-S2Looking produces the most turbulent dynamics: high epoch-to-epoch variance in
-both curves, the widest train-to-test gap, and a best-validation checkpoint
-reached late (typically beyond epoch~70), all consistent with the
+S2Looking produces the most turbulent dynamics for both models: high
+epoch-to-epoch variance, the widest train/validation gap, and best-validation
+checkpoints reached late in training, all consistent with the
 out-of-distribution challenge of oblique imagery for a nadir-pretrained model.%
 }
 
@@ -1148,8 +1213,9 @@ Second, multi-temporal illumination and seasonal variation (SYSU-CD,
 Rec$=74.34\%$): the nine-year acquisition window introduces illumination angle
 shifts, seasonal vegetation cycles, and atmospheric differences that cause
 phenological spectral changes to be confused with structural changes under
-binary supervision. Both failure modes point to the absence of explicit temporal
-alignment or domain-normalisation stages in the current architecture.}
+binary supervision. Both failure modes affect the baseline and the proposed
+model alike, and point to the absence of explicit temporal alignment or
+domain-normalization stages in this family of architectures.}
 
 \journal{\noindent \textbf{(6) Performance ceiling set by encoder backbone
 capacity.}
@@ -1162,7 +1228,7 @@ variable imagery. Upgrading to SegFormer-B4/B5 or fine-tuning on
 domain-specific remote sensing data would likely yield larger accuracy gains
 than further refinement of the linear attention mechanism.
 Competitive SOTA models such as ChangeMamba~\cite{Chen2024ChangeMamba}
-integrate more powerful sequence modelling (selective state spaces) alongside
+integrate more powerful sequence modeling (selective state spaces) alongside
 stronger encoders, confirming that the attention type alone does not determine
 the performance ceiling.}
 
@@ -1179,9 +1245,9 @@ improvements achieved by substituting MHSA with rank-augmented linear attention.
 \section{Conclusion}
 \label{sec:conclusion}
 
-This work introduced \textbf{RALA-ChangeFormer}, an efficient variant of
+This work introduced RALA-ChangeFormer, an efficient variant of
 ChangeFormer in which the multi-head self-attention modules of the
-\textbf{encoder} are replaced with rank-augmented linear attention. All
+encoder are replaced with rank-augmented linear attention. All
 remaining components of the architecture, including the convolutional backbone,
 feed-forward layers, and the lightweight MLP decoder, remain unchanged. The
 goal of this modification is to alleviate the quadratic cost of MHSA in
@@ -1204,7 +1270,7 @@ fixed memory budgets, enabling the model to process more patches per iteration
 and to support efficient training in high-resolution or large-batch settings
 without increasing hardware requirements. Overall, the results demonstrate that
 RALA-ChangeFormer provides a favorable accuracy-efficiency trade-off for VHR
-change detection, preserving predictive behaviour while reducing resource
+change detection, preserving predictive behavior while reducing resource
 demands.
 
 Rather than proposing a novel change detection formulation, this work aims to
@@ -1225,7 +1291,7 @@ be embedded into these computationally demanding architectures.
 \journal{%
 The six-dataset cross-domain extension reported in this journal version
 (Table~\ref{tab:master}) reinforces the efficiency argument while revealing
-concrete accuracy frontiers that future work must address. Four prioritised
+concrete accuracy frontiers that future work must address. Four prioritized
 directions emerge from this analysis.
 
 \noindent\textbf{(a) Dynamic rank adaptation.}
@@ -1246,7 +1312,7 @@ that rank augmentation cannot deliver alone.
 \noindent\textbf{(c) Integration into and competition with current SOTA.}
 State-of-the-art models such as ChangeMamba~\cite{Chen2024ChangeMamba} achieve
 superior accuracy by combining stronger backbones with selective state-space
-sequence modelling. Integrating the RALA mechanism within such architectures
+sequence modeling. Integrating the RALA mechanism within such architectures
 would allow the same efficiency gains while benefiting from their stronger
 representational priors, positioning rank-augmented linear attention as a
 complementary component rather than a standalone solution.

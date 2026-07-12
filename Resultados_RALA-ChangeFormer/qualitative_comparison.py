@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-Qualitative visual comparison for RALA-ChangeFormer.
-Optimized layout: Legend moved to the top (borderless), row metrics removed for cleanliness.
+Qualitative visual comparison: ChangeFormer (V6) vs RALA-ChangeFormer (V7).
+
+Layout per sample row:
+  Pre-change (A) | Post-change (B) | Ground Truth | ChangeFormer | RALA-ChangeFormer
+The two model columns are error-colored maps (TP/TN/FP/FN) so both the
+prediction and its correctness are visible in a single panel.
 """
 
 import numpy as np
@@ -23,28 +27,32 @@ RESULTADOS_DIR = BASE if BASE.name == 'Resultados_RALA-ChangeFormer' else BASE /
 
 DATASETS = {
     'LEVIR-CD+': {
-        'pred_dir':  RESULTADOS_DIR / 'predictions/V7_LP_test',
-        'gt_dir':    RESULTADOS_DIR / 'Datasets/LEVIR-CD-PLUS-BENCH/test/label',
-        'img_A_dir': RESULTADOS_DIR / 'Datasets/LEVIR-CD-PLUS-BENCH/test/A',
-        'img_B_dir': RESULTADOS_DIR / 'Datasets/LEVIR-CD-PLUS-BENCH/test/B',
+        'pred_v6_dir': RESULTADOS_DIR / 'predictions/V6_LP_test',
+        'pred_v7_dir': RESULTADOS_DIR / 'predictions/V7_LP_test',
+        'gt_dir':      RESULTADOS_DIR / 'Datasets/LEVIR-CD-PLUS-BENCH/test/label',
+        'img_A_dir':   RESULTADOS_DIR / 'Datasets/LEVIR-CD-PLUS-BENCH/test/A',
+        'img_B_dir':   RESULTADOS_DIR / 'Datasets/LEVIR-CD-PLUS-BENCH/test/B',
     },
     'SYSU-CD': {
-        'pred_dir':  RESULTADOS_DIR / 'predictions/V7_SY_test',
-        'gt_dir':    RESULTADOS_DIR / 'Datasets/SYSU-CD-BENCH/test/label',
-        'img_A_dir': RESULTADOS_DIR / 'Datasets/SYSU-CD-BENCH/test/A',
-        'img_B_dir': RESULTADOS_DIR / 'Datasets/SYSU-CD-BENCH/test/B',
+        'pred_v6_dir': RESULTADOS_DIR / 'predictions/V6_SYSU_test',
+        'pred_v7_dir': RESULTADOS_DIR / 'predictions/V7_SY_test',
+        'gt_dir':      RESULTADOS_DIR / 'Datasets/SYSU-CD-BENCH/test/label',
+        'img_A_dir':   RESULTADOS_DIR / 'Datasets/SYSU-CD-BENCH/test/A',
+        'img_B_dir':   RESULTADOS_DIR / 'Datasets/SYSU-CD-BENCH/test/B',
     },
     'WHU-CD': {
-        'pred_dir':  RESULTADOS_DIR / 'predictions/V7_WHU_test',
-        'gt_dir':    RESULTADOS_DIR / 'Datasets/WHU-CD-BENCH/test/label',
-        'img_A_dir': RESULTADOS_DIR / 'Datasets/WHU-CD-BENCH/test/A',
-        'img_B_dir': RESULTADOS_DIR / 'Datasets/WHU-CD-BENCH/test/B',
+        'pred_v6_dir': RESULTADOS_DIR / 'predictions/V6_WHU_test',
+        'pred_v7_dir': RESULTADOS_DIR / 'predictions/V7_WHU_test',
+        'gt_dir':      RESULTADOS_DIR / 'Datasets/WHU-CD-BENCH/test/label',
+        'img_A_dir':   RESULTADOS_DIR / 'Datasets/WHU-CD-BENCH/test/A',
+        'img_B_dir':   RESULTADOS_DIR / 'Datasets/WHU-CD-BENCH/test/B',
     },
     'S2Looking': {
-        'pred_dir':  RESULTADOS_DIR / 'predictions/V7_S2Looking_test',
-        'gt_dir':    RESULTADOS_DIR / 'Datasets/S2Looking-BENCH/test/label',
-        'img_A_dir': RESULTADOS_DIR / 'Datasets/S2Looking-BENCH/test/A',
-        'img_B_dir': RESULTADOS_DIR / 'Datasets/S2Looking-BENCH/test/B',
+        'pred_v6_dir': RESULTADOS_DIR / 'predictions/V6_S2Looking_test',
+        'pred_v7_dir': RESULTADOS_DIR / 'predictions/V7_S2Looking_test',
+        'gt_dir':      RESULTADOS_DIR / 'Datasets/S2Looking-BENCH/test/label',
+        'img_A_dir':   RESULTADOS_DIR / 'Datasets/S2Looking-BENCH/test/A',
+        'img_B_dir':   RESULTADOS_DIR / 'Datasets/S2Looking-BENCH/test/B',
     },
 }
 
@@ -94,7 +102,8 @@ matplotlib.rcParams.update({
 CMAP_ERROR = ListedColormap(['#0d0d0d', '#e31a1c', '#1f78b4', '#f7f7f7'])
 CMAP_BINARY = ListedColormap(['#0d0d0d', '#f7f7f7'])
 
-COL_TITLES = ['Pre-change (A)', 'Post-change (B)', 'Ground Truth', 'Prediction', 'Error Map']
+COL_TITLES = ['Pre-change (A)', 'Post-change (B)', 'Ground Truth',
+              'ChangeFormer', 'RALA-ChangeFormer']
 
 LEGEND_PATCHES = [
     Patch(facecolor='#f7f7f7', edgecolor='#444444', lw=0.4, label='TP (Correct Change)'),
@@ -125,17 +134,17 @@ def _error_map(gt: np.ndarray, pred: np.ndarray) -> np.ndarray:
 # ---------------------------------------------------------------------------
 def plot_qualitative(dataset_name: str, paths: dict, samples: list, out_path: Path) -> None:
     n_rows = len(samples)
-    n_cols = 5
+    n_cols = len(COL_TITLES)
 
-    cell_size = 1.80          
-    header_h  = 0.75          # Aumentamos ligeramente para que quepan título + leyenda arriba
+    cell_size = 1.80
+    header_h  = 0.75          # Espacio para título + leyenda arriba
     footer_h  = 0.05          # Margen inferior mínimo ya que no hay leyenda abajo
 
     fig_w = n_cols * cell_size
     fig_h = n_rows * cell_size + header_h + footer_h
 
     fig = plt.figure(figsize=(fig_w, fig_h))
-    
+
     # Ajustamos fracciones del GridSpec dejando el espacio arriba
     top_frac    = 1.0 - (header_h / fig_h)
     bottom_frac = footer_h / fig_h
@@ -148,20 +157,22 @@ def plot_qualitative(dataset_name: str, paths: dict, samples: list, out_path: Pa
     )
 
     for row, fname in enumerate(samples):
-        img_a = np.array(Image.open(paths['img_A_dir'] / fname).convert('RGB'))
-        img_b = np.array(Image.open(paths['img_B_dir'] / fname).convert('RGB'))
-        gt    = _load_binary(paths['gt_dir']   / fname)
-        pred  = _load_binary(paths['pred_dir'] / fname)
-        emap  = _error_map(gt, pred)
+        img_a   = np.array(Image.open(paths['img_A_dir'] / fname).convert('RGB'))
+        img_b   = np.array(Image.open(paths['img_B_dir'] / fname).convert('RGB'))
+        gt      = _load_binary(paths['gt_dir']      / fname)
+        pred_v6 = _load_binary(paths['pred_v6_dir'] / fname)
+        pred_v7 = _load_binary(paths['pred_v7_dir'] / fname)
+        emap_v6 = _error_map(gt, pred_v6)
+        emap_v7 = _error_map(gt, pred_v7)
 
-        panels = [img_a, img_b, gt, pred, emap]
+        panels = [img_a, img_b, gt, emap_v6, emap_v7]
 
         for col, panel in enumerate(panels):
             ax = fig.add_subplot(gs[row, col])
 
             if col < 2:
                 ax.imshow(panel, interpolation='lanczos')
-            elif col in (2, 3):
+            elif col == 2:
                 ax.imshow(panel, cmap=CMAP_BINARY, vmin=0, vmax=1, interpolation='nearest')
             else:
                 ax.imshow(panel, cmap=CMAP_ERROR, vmin=0, vmax=3, interpolation='nearest')
@@ -178,7 +189,7 @@ def plot_qualitative(dataset_name: str, paths: dict, samples: list, out_path: Pa
 
     # ── Título Superior Principal ───────────────────────────────────────────
     fig.text(0.5, 1.0 - (0.22 / fig_h),
-             f'{dataset_name} — Extended Qualitative Evaluation',
+             f'{dataset_name} — Qualitative Comparison',
              ha='center', va='top', fontsize=9.5, fontweight='bold')
 
     # ── Leyenda Superior (Entre Título y Primera Fila) ──────────────────────
@@ -186,7 +197,7 @@ def plot_qualitative(dataset_name: str, paths: dict, samples: list, out_path: Pa
     fig.legend(
         handles=LEGEND_PATCHES, loc='upper center', ncol=4,
         fontsize=7, frameon=False, # Remueve por completo el borde y fondo gris
-        bbox_to_anchor=(0.5, 1.0 - (0.42 / fig_h)), 
+        bbox_to_anchor=(0.5, 1.0 - (0.42 / fig_h)),
         columnspacing=1.2, handlelength=1.2,
     )
 
@@ -206,11 +217,11 @@ def main() -> None:
 
         missing = []
         for fname in samples:
-            for key in ('gt_dir', 'pred_dir', 'img_A_dir', 'img_B_dir'):
+            for key in ('gt_dir', 'pred_v6_dir', 'pred_v7_dir', 'img_A_dir', 'img_B_dir'):
                 p = paths[key] / fname
                 if not p.exists():
                     missing.append(str(p))
-                    
+
         if missing:
             print(f'\n[ERROR] Missing files detected for {dataset_name}:')
             for m in missing:

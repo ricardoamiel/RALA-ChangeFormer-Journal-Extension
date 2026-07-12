@@ -1,0 +1,23 @@
+================ (Wed Jul  1 14:55:45 2026) ================
+gpu_ids: [0] project_name: V6_WHU checkpoint_root: checkpoints vis_root: vis num_workers: 16 dataset: CDDataset data_name: WHU batch_size: 16 split: train split_val: val img_size: 256 shuffle_AB: False n_class: 2 embed_dim: 256 pretrain: None multi_scale_train: True multi_scale_infer: False multi_pred_weights: [0.5, 0.5, 0.5, 0.8, 1.0] net_G: ChangeFormerV6 loss: ce prior_dir: None optimizer: adamw lr: 0.0001 max_epochs: 120 lr_policy: linear lr_decay_iters: 100 checkpoint_dir: checkpoints/V6_WHU vis_dir: vis/V6_WHU loading last checkpoint...
+Eval Historical_best_acc = 0.9447 (at epoch 112)
+
+Begin evaluation...
+Is_training: False. [1,47],  running_mf1: 0.91475
+acc: 0.99044 miou: 0.88388 mf1: 0.93498 iou_0: 0.99011 iou_1: 0.77766 F1_0: 0.99503 F1_1: 0.87492 precision_0: 0.99352 precision_1: 0.90976 recall_0: 0.99655 recall_1: 0.84266 
+
+================ (Wed Jul  1 14:56:32 2026) ================
+gpu_ids: [0] project_name: V6_WHU print_models: False checkpoints_root: checkpoints vis_root: vis num_workers: 8 dataset: CDDataset data_name: WHU batch_size: 1 split: test img_size: 256 n_class: 2 embed_dim: 256 net_G: ChangeFormerV6 checkpoint_name: best_ckpt.pt prior_dir: None checkpoint_dir: checkpoints/V6_WHU vis_dir: vis/V6_WHU loading last checkpoint...
+Eval Historical_best_acc = 0.9447 (at epoch 112)
+
+Begin evaluation...
+Is_training: False. [1,744],  running_mf1: 0.49325
+Is_training: False. [101,744],  running_mf1: 0.48934
+Is_training: False. [201,744],  running_mf1: 0.83991
+Is_training: False. [301,744],  running_mf1: 0.50000
+Is_training: False. [401,744],  running_mf1: 0.50000
+Is_training: False. [501,744],  running_mf1: 0.50000
+Is_training: False. [601,744],  running_mf1: 0.50000
+Is_training: False. [701,744],  running_mf1: 0.50000
+acc: 0.99044 miou: 0.88388 mf1: 0.93498 iou_0: 0.99011 iou_1: 0.77766 F1_0: 0.99503 F1_1: 0.87492 precision_0: 0.99352 precision_1: 0.90975 recall_0: 0.99655 recall_1: 0.84266 
+

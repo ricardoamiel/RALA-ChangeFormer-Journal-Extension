@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Parse ChangeFormerV7 experiment results and generate publication-quality PDF plots.
+Parse ChangeFormerV6 (baseline) and V7 (RALA-ChangeFormer) experiment results
+and generate publication-quality PDF plots.
 
 Outputs (in plots/):
-  learning_curves.pdf   Training dynamics for all four datasets
-  metrics.csv           Test metrics table for all four datasets
+  learning_curves.pdf   Training/validation dynamics, CF vs RALA-CF, four datasets
+  metrics.csv           Test metrics table for both models on all four datasets
 
 Qualitative figures are handled by qualitative_comparison.py.
 """
@@ -19,7 +20,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from matplotlib.colors import ListedColormap
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -27,30 +27,33 @@ from matplotlib.colors import ListedColormap
 
 BASE = Path(__file__).parent
 
+MODELS = ('CF', 'RALA-CF')  # V6 = ChangeFormer baseline, V7 = RALA-ChangeFormer
+
+def _exp(folder: str, log_name: str = 'log_test.txt') -> dict:
+    d = BASE / folder
+    return {
+        'log_test':   d / log_name,
+        'scores_npy': d / 'scores_dict.npy',
+        'train_acc':  d / 'train_acc.npy',
+        'val_acc':    d / 'val_acc.npy',
+    }
+
 EXPERIMENTS = {
     'LEVIR-CD+': {
-        'log_test':   BASE / 'LEVIR+/V7_LP/log_test.txt',
-        'scores_npy': BASE / 'LEVIR+/V7_LP/scores_dict.npy',
-        'train_acc':  BASE / 'LEVIR+/V7_LP/train_acc.npy',
-        'val_acc':    BASE / 'LEVIR+/V7_LP/val_acc.npy',
+        'CF':      _exp('LEVIR+/V6_LEVIRPLUS'),
+        'RALA-CF': _exp('LEVIR+/V7_LP'),
     },
     'SYSU-CD': {
-        'log_test':   BASE / 'SYSU/V7_SY/log_test.txt',
-        'scores_npy': BASE / 'SYSU/V7_SY/scores_dict.npy',
-        'train_acc':  BASE / 'SYSU/V7_SY/train_acc.npy',
-        'val_acc':    BASE / 'SYSU/V7_SY/val_acc.npy',
+        'CF':      _exp('SYSU/V6_SYSU'),
+        'RALA-CF': _exp('SYSU/V7_SY'),
     },
     'WHU-CD': {
-        'log_test':   BASE / 'WHU/V7_WHU/log_test.docx',
-        'scores_npy': BASE / 'WHU/V7_WHU/scores_dict.npy',
-        'train_acc':  BASE / 'WHU/V7_WHU/train_acc.npy',
-        'val_acc':    BASE / 'WHU/V7_WHU/val_acc.npy',
+        'CF':      _exp('WHU/V6_WHU'),
+        'RALA-CF': _exp('WHU/V7_WHU', 'log_test.docx'),
     },
     'S2Looking': {
-        'log_test':   BASE / 'S2Looking/V7_S2Looking/log_test.docx',
-        'scores_npy': BASE / 'S2Looking/V7_S2Looking/scores_dict.npy',
-        'train_acc':  BASE / 'S2Looking/V7_S2Looking/train_acc.npy',
-        'val_acc':    BASE / 'S2Looking/V7_S2Looking/val_acc.npy',
+        'CF':      _exp('S2Looking/V6_S2Looking'),
+        'RALA-CF': _exp('S2Looking/V7_S2Looking', 'log_test.docx'),
     },
 }
 
@@ -79,10 +82,9 @@ matplotlib.rcParams.update({
     'text.usetex':        False,
 })
 
-COLORS = {
-    'train': '#2166ac',
-    'val':   '#d73027',
-    'test':  '#1a9850',
+MODEL_COLORS = {
+    'CF':      '#2166ac',   # baseline ChangeFormer
+    'RALA-CF': '#d73027',   # our approach
 }
 
 # ---------------------------------------------------------------------------
@@ -162,59 +164,67 @@ METRIC_COLS = ['Precision', 'Recall', 'F1', 'IoU', 'OA', 'mF1', 'mIoU']
 
 def save_metrics_csv(experiments: dict, out_path: Path) -> None:
     rows = []
-    for name, exp in experiments.items():
-        m = load_metrics(exp)
-        row = {'Dataset': name}
-        row.update({k: f'{m[k]:.4f}' for k in METRIC_COLS})
-        rows.append(row)
+    for name, variants in experiments.items():
+        for model in MODELS:
+            m = load_metrics(variants[model])
+            row = {'Dataset': name, 'Model': model}
+            row.update({k: f'{m[k]:.4f}' for k in METRIC_COLS})
+            rows.append(row)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=['Dataset'] + METRIC_COLS)
+        writer = csv.DictWriter(f, fieldnames=['Dataset', 'Model'] + METRIC_COLS)
         writer.writeheader()
         writer.writerows(rows)
     print(f'  Saved: {out_path}')
 
 # ---------------------------------------------------------------------------
-# Learning curves
+# Learning curves — CF vs RALA-CF per dataset
 # ---------------------------------------------------------------------------
 
 def plot_learning_curves(experiments: dict, out_path: Path) -> None:
-    fig, axes = plt.subplots(2, 2, figsize=(7.16, 5.0))
+    fig, axes = plt.subplots(2, 2, figsize=(7.16, 5.2))
     axes = axes.flatten()
 
-    for ax, (name, exp) in zip(axes, experiments.items()):
-        train_mf1 = np.load(exp['train_acc'])
-        val_mf1   = np.load(exp['val_acc'])
-        epochs    = np.arange(1, len(train_mf1) + 1)
+    for ax, (name, variants) in zip(axes, experiments.items()):
+        ymins = []
+        for model in MODELS:
+            exp   = variants[model]
+            color = MODEL_COLORS[model]
+            train_mf1 = np.load(exp['train_acc'])
+            val_mf1   = np.load(exp['val_acc'])
+            # Some runs log one extra training entry; plot each series on its
+            # own epoch axis instead of assuming equal lengths.
+            train_ep = np.arange(1, len(train_mf1) + 1)
+            val_ep   = np.arange(1, len(val_mf1) + 1)
 
-        best_ep  = int(np.argmax(val_mf1))
-        best_val = float(val_mf1[best_ep])
-        metrics  = load_metrics(exp)
+            best_ep  = int(np.argmax(val_mf1))
+            best_val = float(val_mf1[best_ep])
+            ymins.append(float(train_mf1.min()))
 
-        ax.plot(epochs, train_mf1, color=COLORS['train'], lw=1.0,
-                label='Train mF1', zorder=2)
-        ax.plot(epochs, val_mf1,   color=COLORS['val'],   lw=1.0,
-                label='Val mF1',   zorder=2)
-        ax.axhline(metrics['F1'], color=COLORS['test'], ls='--', lw=0.85,
-                   label=f'Test F1={metrics["F1"]:.4f}', zorder=1)
-        ax.scatter([best_ep + 1], [best_val],
-                   color=COLORS['val'], marker='*', s=60, zorder=5,
-                   label=f'Best val (ep. {best_ep + 1})')
+            ax.plot(train_ep, train_mf1, color=color, lw=0.9, ls='--', alpha=0.65,
+                    label=f'{model} train', zorder=2)
+            ax.plot(val_ep, val_mf1, color=color, lw=1.15,
+                    label=f'{model} val', zorder=3)
+            ax.scatter([best_ep + 1], [best_val], color=color, marker='*',
+                       s=55, zorder=5,
+                       label=f'{model} best val ({best_val:.4f})')
 
+        n_epochs = len(np.load(variants[MODELS[0]]['train_acc']))
         ax.set_title(name, fontweight='bold', pad=3)
         ax.set_xlabel('Epoch')
         ax.set_ylabel('mF1')
-        ax.set_xlim(0, len(train_mf1) + 1)
-        ax.set_ylim(bottom=max(0.35, float(train_mf1.min()) - 0.05))
+        ax.set_xlim(0, n_epochs + 1)
+        ax.set_ylim(bottom=max(0.35, min(ymins) - 0.05))
         ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
         ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True, nbins=6))
-        ax.legend(loc='lower right', framealpha=0.75, edgecolor='#cccccc')
+        ax.legend(loc='lower right', framealpha=0.75, edgecolor='#cccccc',
+                  ncol=2, columnspacing=0.9, handlelength=1.6)
         ax.grid(True, lw=0.35, alpha=0.5, color='#888888')
         ax.set_axisbelow(True)
 
-    fig.suptitle('RALA-ChangeFormer — Training Dynamics', fontsize=10,
-                 fontweight='bold', y=1.01)
+    fig.suptitle('ChangeFormer vs RALA-ChangeFormer — Training Dynamics',
+                 fontsize=10, fontweight='bold', y=1.01)
     plt.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, format='pdf')
@@ -230,14 +240,16 @@ def main() -> None:
     plots_dir.mkdir(exist_ok=True)
 
     print('=== Parsed test metrics ===')
-    for name, exp in EXPERIMENTS.items():
-        m = load_metrics(exp)
-        src = 'log' if parse_metrics_from_log(exp.get('log_test')) else 'npy'
-        print(
-            f'  [{src}] {name:<12s}: '
-            f'Prec={m["Precision"]:.4f}  Rec={m["Recall"]:.4f}  '
-            f'F1={m["F1"]:.4f}  IoU={m["IoU"]:.4f}  OA={m["OA"]:.4f}'
-        )
+    for name, variants in EXPERIMENTS.items():
+        for model in MODELS:
+            exp = variants[model]
+            m = load_metrics(exp)
+            src = 'log' if parse_metrics_from_log(exp.get('log_test')) else 'npy'
+            print(
+                f'  [{src}] {name:<12s} {model:<8s}: '
+                f'Prec={m["Precision"]:.4f}  Rec={m["Recall"]:.4f}  '
+                f'F1={m["F1"]:.4f}  IoU={m["IoU"]:.4f}  OA={m["OA"]:.4f}'
+            )
 
     print('\n=== Saving CSV ===')
     save_metrics_csv(EXPERIMENTS, plots_dir / 'metrics.csv')
