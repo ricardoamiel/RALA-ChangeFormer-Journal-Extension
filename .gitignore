@@ -51,3 +51,17 @@
 /Resultados_RALA-ChangeFormer/predictions/V6_WHU_test/*.png
 
 /Journal_Extension/CORRECCIONES.md
+/Journal_Extension/REVIEW_REPORT.md
+/Journal_Extension/samplepaper.tex
+# Safety patterns: never track checkpoints, caches, or LaTeX build files
+*.pt
+*.pth
+__pycache__/
+*.pyc
+*.aux
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.out
