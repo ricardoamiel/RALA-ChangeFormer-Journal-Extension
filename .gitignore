@@ -50,9 +50,15 @@
 /Resultados_RALA-ChangeFormer/predictions/V6_SYSU_test/*.png
 /Resultados_RALA-ChangeFormer/predictions/V6_WHU_test/*.png
 
-/Journal_Extension/CORRECCIONES.md
-/Journal_Extension/REVIEW_REPORT.md
-/Journal_Extension/samplepaper.tex
+# Manuscript sources and private material stay local: the public companion
+# repo only carries the experiment artifacts in Resultados_RALA-ChangeFormer/
+/Journal_Extension/
+/Paper_Presentation___Efficient_Multi_Temporal_Building_Change_Detection/
+/Paper___Ricardo/
+/RALA-ChangeFormer/
+/Thesis_Ricardo_Amiel/
+/Bitacora - Satellital Imagery for urban plannification.xlsx
+
 # Safety patterns: never track checkpoints, caches, or LaTeX build files
 *.pt
 *.pth
@@ -65,3 +71,4 @@ __pycache__/
 *.fdb_latexmk
 *.fls
 *.out
+/.claude/
