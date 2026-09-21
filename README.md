@@ -1,5 +1,7 @@
 # RALA-ChangeFormer — Journal Extension: Evaluation Artifacts
 
+**We have been accepted as position 27 on the Journal CCIC (Communications in Computer and Information Science) !! 🎉🥳 (Monday 7th set)**
+
 Companion repository for the journal extension of RALA-ChangeFormer:
 efficient building change detection (BCD) from very high-resolution
 satellite imagery by replacing quadratic multi-head self-attention with
